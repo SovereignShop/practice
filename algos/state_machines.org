@@ -1,0 +1,200 @@
+#+TITLE: State Machine Problems
+
+* State Machine :drill:
+Write a function that inverts a state machine,
+so that it accepts the reverse any string the
+original machine accepts.
+
+** Answer
+... not implemented ...
+* State Machine :drill:
+Write a function that takes a state machine and "joins"
+them, so that the new state machine accepts only strings
+which are accepted by both machines.
+
+* State Machine :drill:
+Write a function that takes a state machine and "unifies"
+them, so that the new state machine accepts strings from
+either input machine.
+
+#+begin_src clojure
+(def machine-a {:states })
+#+end_src
+** Answer
+Unification is implemented trivially by..
+
+1. Connect the start state of M1 to all the states connected to start of m2 with the same letters.
+2. Let the alphabet be the union of the two sets.
+3. Let the start state be the start state of m1.
+4. Let the accept states be the union of the accept states.
+5. Canonicalize/Minimize the resulting machine.
+
+#+begin_src clojure
+
+(defn unify-machines [m1 m2]
+  (let [states (into #{} cat
+                     [(sort (:states m1))
+                      (sort (:states m2))])
+        alphabet (into #{} cat [(:alphabet m1) (:alphabet m2)])
+        start (:start m1)
+        accepts (into )
+        transitions ]))
+#+end_src
+*
+* State Machine :drill:
+Minimize a state machine. Given any finite state machine, return
+a new state machine with the minimum number of states in it.
+
+** Answer
+Imagine walking the state graph as a little agent using local information
+to simplify the graph. It's also useful to think in regex space. Imagine
+the regex "a[bc]de" and "b[bc]de" could result in the transition function:
+
+#+begin_src clojure
+{q0 {a q1    ;; Start transitions
+     b q6}
+
+ q1 {b q2    ;; [bc]
+     c q2}
+ q2 {d q3}
+ q3 {e q4}
+
+ q6 {b q7    ;; [bc]
+     c q7}
+ q7 {d q8}
+ q8 {e q9}}
+#+end_src
+
+This is not the minimal transition function. We can get rid of states q6-q9, since it
+is an equivalent substructure. Somehow we'd like to identify equivalent sub-machines.
+q1-q4 == q6-q9. In other words, this might reduce to finding all equivalent subsets of
+enumerated strings. i.e. find all equivalent paths.
+
+q1 -b-> q2
+q6 -b-> q7
+
+Why do we potentially need more states than letters? Because... How do you accept the string "aaaa" with 1 state?
+How about "abab" with two states? Does "abababab" require 8 states?
+
+Can we "program" a counter that requires fewer states? No, the only way to count is by adding more states.
+
+
+#{"xxx" "yyy" "bbb"} -> 9 states
+
+Find all the substrings in common
+
+
+#+begin_src clojure
+(defn minimize-machine
+  "Minimize a state machine, removing unecessary states and transitions."
+  [{:keys [transitions states] :as machines}]
+  (let [edge-groups (group-by )]))
+#+end_src
+* Strings :Combinatorics:drill:
+Find the common substrings of two strings.
+** Answer
+#+begin_src clojure
+(defn common-substrings [s1 s2]
+  (let [s1-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s1))
+        s2-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s2))]
+    (for [[c1 is] s1-starts
+          i1 is
+          i2 (s2-starts c1)
+          j2 (range (inc i2) (count s2))
+          :while (<= (+ i1 (- j2 i2)) (count s1))
+          ;; :while (= (.substring s2 i2 j2)
+          ;;           (.substring s1 i1 (- j2 i2)))
+          ]
+      (.substring s2 i2 j2))))
+
+(common-substrings "xab" "yab")
+
+(defn common-substrings [s1 s2]
+  (let [s1-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s1))
+        s2-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s2))]))
+
+(defn common-substrings [s1 s2]
+  (loop [[c & cs] s1
+         ret #{}]
+    (if (nil? c)
+      (disj ret "")
+      (let [[l r] (loop [[c1 & cs1] (cons c cs)
+                         [c2 & cs2] s2
+                         s []]
+                    (cond (nil? c2) [(count s) (conj ret (apply str s))]
+                          (= c1 c2) (recur cs1 cs2 (conj s c1))
+                          :else (recur (cons c cs) cs2 s)))]
+        (recur (drop l (cons c cs)) r)))))
+
+;; Insanely slow.
+
+(common-substrings "xabx" "yabx")
+
+#+end_src
+* State Machine :drill:
+Write a function that takes a set of strings and returns
+a machine that matches uniquely those strings.
+#+begin_src clojure
+(defn strings->machine [strings]
+  #_...)
+
+(= (strings->machine #{"hi" "hey" "hello"})
+   '{:states #{q0 q1 q2 q3 q4 q5 q6 q7}
+     :alphabet #{e h i l o y}
+     :start q0
+     :accepts #{q2 q4 q7}
+     :transitions {q0 {h q1}
+                   q1 {i q2, e q3}
+                   q3 {l q5, y q4}
+                   q5 {l q6}
+                   q6 {o q7}}})
+#+end_src
+** Answer
+This is getting close. Betting is to merge machines string by string.
+So this problem reduces to:
+
+1. Deduce the machines for strings 1..N
+2. Merge machines together.
+
+#+begin_src clojure
+(defn strings->machine [strings]
+  (let [state-gen (reductions (fn [_ i] (symbol (str "q" i))) 'q0 (next (range)))
+        alphabet (into #{} cat strings)
+        [start state-gen] (split-at 1 state-gen)
+        start (first start)
+        letter->state (into {} (map vector alphabet state-gen))
+        accepts (set (vals (select-keys letter->state (map last strings))))
+        transitions
+        (loop [[s & ss] strings
+               [c1 c2 & chs] s
+               transitions {start (select-keys letter->state
+                                               (map first strings))}]
+          (if (nil? s)
+            transitions
+            (if (nil? c2)
+              (recur ss (first ss) transitions)
+              (let [q1 (letter->state c1)
+                    q2 (letter->state c2)]
+                (recur (cons s ss)
+                       (cons c2 chs)
+                       (update transitions q1 assoc c2 q2))))))]
+    {:states (into #{} (vals letter->state))
+     :alphabet alphabet
+     :accepts accepts
+     :start start
+     :transitions transitions}))
+
+(strings->machine ["hi" "hey" "hello"])
+#+end_src

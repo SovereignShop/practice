@@ -1,0 +1,243 @@
+#+TITLE: Raft Protocol
+
+** RAFT :drill:
+:PROPERTIES:
+:ID:       63fb76ea-94a3-471d-a0f4-23f1cc4d6b85
+:END:
+What are the Three states a node can be in?
+*** Answer
+Leader, Follow, and Candidate states
+** RAFT :drill:
+SCHEDULED: <2021-02-19 Fri>
+:PROPERTIES:
+:ID:       c8807188-53be-4b35-a1a6-da1ec4939f2d
+:DRILL_LAST_INTERVAL: 4.14
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 5.0
+:DRILL_EASE: 2.6
+:DRILL_LAST_QUALITY: 5
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:06]
+:END:
+In what state do all nodes start?
+*** Answer
+follow state
+** RAFT :drill:
+SCHEDULED: <2021-02-19 Fri>
+:PROPERTIES:
+:ID:       49ea3491-c3d9-45a8-b945-eedd9841ea2d
+:DRILL_LAST_INTERVAL: 4.0
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 4.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 4
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:09]
+:END:
+When does a node enter a Candidate state?
+*** Answer
+If a node in a Follower state does not hear
+from a Leader node.
+** RAFT :drill:
+:PROPERTIES:
+:ID:       8b7b5f4d-7399-4d2b-8646-7250c2da41c7
+:END:
+What is the first action that a candidate node takes?
+*** Answer
+It sends a request for votes from all other nodes. Notes
+** RAFT :drill:
+SCHEDULED: <2021-02-19 Fri>
+:PROPERTIES:
+:ID:       b54e768f-bdb3-4bc0-bacf-2afabc5b9acf
+:DRILL_LAST_INTERVAL: 4.0
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 4.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 4
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:10]
+:END:
+When does a candidate become a leader?
+*** Answer
+When it gets votes from a majority of nodes. This
+process is called Leader Election.
+** RAFT :drill:
+Describe Log Replication
+***  Answer
+The leader is responsible for the log replication. It accepts client requests.
+Each client request consists of a command to be executed by the replicated state
+machines in the cluster. After being appended to the leader's log as a new
+entry, each of the requests is forwarded to the followers as AppendEntries
+messages. In case of unavailability of the followers, the leader retries
+AppendEntries messages indefinitely, until the log entry is eventually stored by
+all of the followers.
+
+Once the leader receives confirmation from the majority of its followers that
+the entry has been replicated, the leader applies the entry to its local state
+machine, and the request is considered committed.[1][4] This event also commits
+all previous entries in the leader's log. Once a follower learns that a log
+entry is committed, it applies the entry to its local state machine. This
+ensures consistency of the logs between all the servers through the cluster,
+ensuring that the safety rule of Log Matching is respected.
+
+In the case of leader crash, the logs can be left inconsistent, with some logs
+from the old leader not being fully replicated through the cluster. The new
+leader will then handle inconsistency by forcing the followers to duplicate its
+own log. To do so, for each of its followers, the leader will compare its log
+with the log from the follower, find the last entry where they agree, then
+delete all the entries coming after this critical entry in the follower log and
+replace it with its own log entries. This mechanism will restore log consistency
+in a cluster subject to failures.
+** RAFT :drill:
+What is the Election Safety Guarantee?
+*** Answer
+At most one leader can be elected in any given term.
+** RAFT :drill:
+What is the Leader Append-only Guarantee?
+*** Answer
+The leader can only append entries to it's log (Can't overwrite or delete)
+** RAFT :drill:
+What is the log matching guarantee?
+*** Answer
+If two logs contain an entry with the same index and term, then the logs are
+identical in all entries up through the given index.
+** RAFT :drill:
+What is the Leader completeness guarantee?
+*** Answer
+If a log entry is committed in a given term then it will be present in the logs of the leaders since this term.
+** RAFT :drill:
+What is state machine safety?
+*** Answer
+if a server has applied a particular log entry to its state machine, then no other server may apply a different command for the same log.
+** RAFT :drill:
+What is broadCastTime?
+*** Answer
+*broadcastTime* is the average time it takes for a server to send a request to
+ ever other server in the custer and receive responses from each.
+** RAFT :drill:
+What is the MTBF?
+*** Answer
+The MTBF (Median Time Between Failures) is the average time between failures for a server.
+** RAFT :drill:
+What is the electionTimout?
+*** Answer
+The *electionTimout* is the time it takes for
+** RAFT :drill:
+What happens if a Follower crashes?
+*** Answer
+If a follower crashes, AppendEntries and vote requests sent by other servers
+will fail. Such failures are handled by the servers trying indefinitely to reach
+the downed follower. If the follower restarts, the pending requests will
+complete. If the request has already been taken into account before the failure,
+the restarted follower will just ignore it.
+
+** RAFT :drill:
+:PROPERTIES:
+:ID:       cf07130a-ba91-43ce-9b44-8bffcfe5113a
+:END:
+What is the role of the leader?
+*** Answer
+All changes go through the Leader role. i.e. it is
+the "Source of Truth"
+** RAFT :drill:
+SCHEDULED: <2021-02-19 Fri>
+:PROPERTIES:
+:ID:       dc449fd6-fa4b-42a1-9fdb-9925a4ee7609
+:DRILL_LAST_INTERVAL: 4.0
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 4.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 4
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:07]
+:END:
+Where do state change requests go?
+*** Answer
+Requests for state change go to a log in the
+Leader node, where they accumulate uncommitted.
+** RAFT :drill:
+:PROPERTIES:
+:ID:       25fcc2c5-9fb3-4cdb-ba12-d6f56b57189c
+:END:
+What are the changes involved in "Committing" a
+update? What is the process called?
+*** Answer
+The process is called Log Replication. In involves the
+following sequence:
+
+1. The commit entry is first replicated to follower nodes.
+2. The leader waits until the majority of nodes have written
+   the entry (receives response indicating such).
+3. Entry is then committed on the leader node.
+4. Leader then notifies the follows that the entry has
+   been committed.
+5. The cluster has now come to consensus about the system state.
+** RAFT :drill:
+:PROPERTIES:
+:ID:       400318bf-78ce-4348-89df-ff9a93330b3f
+:DRILL_LAST_INTERVAL: 0.0
+:DRILL_REPEATS_SINCE_FAIL: 1
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 1
+:DRILL_AVERAGE_QUALITY: 2.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 2
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:10]
+:END:
+What happens when a follower becomes a new candidate?
+*** Answer
+It starts a new Election Term by *voting for itself*. It then
+sends out a "request for vote" to other nodes.
+** RAFT :drill:
+:PROPERTIES:
+:ID:       0b648e76-f9e3-4dbd-b2a7-af59d70762a3
+:END:
+How is a receiving node's voting decision determined?
+*** Answer
+If it hasn't yet voted, it votes for the requesting candidate node.
+It then resets it's election timeout.
+** RAFT :drill:
+SCHEDULED: <2021-02-19 Fri>
+:PROPERTIES:
+:ID:       9d77590d-d4cc-4a70-85f1-38eb89e917ea
+:DRILL_LAST_INTERVAL: 4.0
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 4.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 4
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:06]
+:END:
+When is the election timeout reset?
+*** Answer
+The election timeout is reset when it receives a Vote Request from a node.
+** RAFT :drill:
+:PROPERTIES:
+:ID:       eebe3558-ee35-4d6e-9962-3b8cc6372a93
+:END:
+When does a candidate become a leader?
+*** Answer
+A candidate becomes a leader when it receives a majority of votes.
+** RAFT :drill:
+:PROPERTIES:
+:ID:       0cfc7921-cf7a-4f7e-8af2-9fb9b64880a5
+:DRILL_LAST_INTERVAL: 0.0
+:DRILL_REPEATS_SINCE_FAIL: 1
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 1
+:DRILL_AVERAGE_QUALITY: 2.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 2
+:DRILL_LAST_REVIEWED: [2021-02-15 Mon 17:08]
+:END:
+What are *Append Entry* messages? When are they sent?
+*** Answer
+*Append Entry* messages are sent by a new found leader. They
+are sent in *heartbeat timeout* intervals.
+
+The election term will continue until a follower stops receiving heartbeats and becomes a candidate.

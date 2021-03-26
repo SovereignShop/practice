@@ -1,0 +1,792 @@
+#+TITLE: RETE Algorithm
+
+* High Level Concepts
+** RETE :drill:
+How are nodes connected across classes?
+*** Answer
+Nodes are connected with JoinNodes. These nodes have conditions that
+satisfy class Flight and class Account, for example.
+** RETE :drill:
+What does each node represent in the Discrimination Tree?
+*** Answer
+Each node represents an additional test to the series of conditions applied upstream.
+** RETE :drill:
+Why do we store facts in AlphaNodes?
+*** Answer
+Recall that AlphaNodes in the network store facts for which
+all conditions are true in the path starting from the root AlphaNode.
+Thus, as we are inserting new facts in the session, we can
+** RETE :drill:
+What dos evaluation consist of at a high level?
+*** Answer
+The evaluation phase consist in running the data through the RETE network to
+identify the applicable rules, for which all conditions are satisfied.
+** RETE :drill:
+:PROPERTIES:
+:ID:       a292ac75-b7e9-4c68-b1b4-721d83fa6aa8
+:END:
+What is the discrimination tree?
+*** Answer
+The discrimination tree is the first part of the RETE
+network. It starts with Alpha nodes that are associated
+with classes.
+** RETE :drill:
+:PROPERTIES:
+:ID:       62078b47-7c15-427e-8f68-aec7f5deb6e0
+:END:
+Who invented the RETE algorithm and when?
+*** Answer
+ Dr. Charles Forgy as a PhD thesis in 1978-79.
+** RETE :drill:
+:PROPERTIES:
+:ID:       40e35654-7220-4cf9-ae1f-cee9a8c9b8cd
+:END:
+What are the parts of the RETE algoriht
+** RETE :drill:
+:PROPERTIES:
+:ID:       9274ad0d-4a84-46f2-9a96-c1ab6f6d5222
+:END:
+What is the Production Memory?
+*** Answer
+...
+** RETE :drill:
+:PROPERTIES:
+:ID:       fcc217af-617f-4dae-935e-62d986eebe82
+:END:
+What are the four types of nodes in the discrimination network?
+*** Answer
+In the original paper:
+- root, 1-input, 2-input and terminal.
+
+aka:
+- ReteNode
+- ObjectTypeNode
+- AlphaNode
+- JoinNode
+** RETE :drill:
+:PROPERTIES:
+:ID:       c9ecd499-11f1-4567-a4ec-2f5070fab5d5
+:END:
+What are the two two-input nodes? What are they both types of?
+*** Answer
+JoinNode and NotNode. Both are types of BetaNodes.
+** RETE :drill:
+:PROPERTIES:
+:ID:       5f2fb6ad-305a-4171-8ff1-3361180cfb24
+:END:
+what are two-input nodes used for?
+*** Answer
+BetaNodes are use to compare 2 objects, and their fields, to each other.
+** RETE :drill:
+:PROPERTIES:
+:ID:       4ada54be-fc6e-4fa3-be15-c9f192127e88
+:END:
+How do we refer to the two inputs to BetaNodes?
+*** Answer
+By convension we refer to them as left and right.
+** RETE :drill:
+:PROPERTIES:
+:ID:       dc837314-3386-43c3-b872-b0fdba8a435d
+:DRILL_LAST_INTERVAL: 0.0
+:DRILL_REPEATS_SINCE_FAIL: 1
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 1
+:DRILL_AVERAGE_QUALITY: 1.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 1
+:DRILL_LAST_REVIEWED: [2021-02-17 Wed 20:02]
+:END:
+What is the left input to a BetaNode?
+*** Answer
+Typically a list or tuple of objects.
+** RETE :drill:
+:PROPERTIES:
+:ID:       a36ff5a0-1217-4fb4-8265-32242d3496c8
+:END:
+What is the right input to a BetaNode?
+*** Answer
+A single object.
+** RETE :drill:
+:PROPERTIES:
+:ID:       efc4c06a-0fff-4868-9f03-0e27a6c0fa4b
+:END:
+How do you implement exists checks?
+*** Answer
+Exists checks can be implemented with to NotNodes.
+** RETE :drill:
+:PROPERTIES:
+:ID:       6af1da95-061b-4525-a1fc-a9f3691d7818
+:END:
+What is the Beta Memory?
+*** Answer
+The left input to beta nodes is called the Beta Memory. The
+Beta Memory remembers all incoming tuples.
+** RETE :drill:
+:PROPERTIES:
+:ID:       38ee7284-bf3a-4354-ab1f-01d938463aaf
+:END:
+What is the Alpha Memory?
+***  Answer
+The right input to BetaNodes is called the AlphaMemory. It
+remembers all incoming objects?
+** RETE :drill:
+:PROPERTIES:
+:ID:       2c81574a-ec9d-4b8e-81be-2ec701c3b68c
+:END:
+What does a LeftInputNodeAdapter take as input and produce as output?
+*** Answer
+It takes an Object as input and produces ("promolgates") a single
+Object tuple.
+** RETE :drill:
+:PROPERTIES:
+:ID:       ec8d0c0c-94e1-4582-b1f0-9bc071152270
+:END:
+what are Terminal Nodes used for?
+*** Answer
+Terminal are used to indicate when a single rule has matched all conditions.
+We say at this point that a rule has a "full match".
+
+Note that one rule can have many Terminal Nodes. For example
+** RETE :drill:
+:PROPERTIES:
+:ID:       31d04075-519b-400f-a13b-207030e3d468
+:END:
+What type of graph does the RETE algorithm use?
+*** Answer
+The RETE algorithm uses a rooted acyclic directed graph
+** RETE :drill:
+:PROPERTIES:
+:ID:       6c27a6da-44eb-4adc-8014-667018e27594
+:END:
+What do Nodes represent in the RETE algorithm?
+*** Answer
+Nodes (except the root) represent patterns.
+** RETE :drill:
+:PROPERTIES:
+:ID:       f4ffaede-2187-458c-a48d-8dd489988ff7
+:END:
+What do paths in the Discrination Tree represent?
+*** Answer
+Paths represent the left-hand side of rules.
+** RETE :drill:
+:PROPERTIES:
+:ID:       363ed776-aae8-42f9-b7a5-50029695531a
+:END:
+What information is stored at each node?
+*** Answer
+At each node is stored information about the facts satisfied by the patterns of the nodes in the paths from the root up to and including this node
+
+The information is a relation representing the possible values of variables occuring in the patterns in the path.
+** RETE :drill:
+:PROPERTIES:
+:ID:       75749af9-2273-44ac-8c2c-a658c0dab608
+:END:
+What does the root node have as successors?
+*** Answer
+The root node has as successors one-input "kind" nodes.
+In OO systems, this is the class.
+** RETE :drill:
+:PROPERTIES:
+:ID:       fa8b8f83-5d8c-41c9-92f5-a0086e5834b6
+:END:
+What happens when a new fact is added to or removed from the network?
+*** Answer
+When a fact is added or removed from working memory, a token representing that
+fact and operation is entered at the root of the graph and propagated to its
+leaves modifying as appropriate the information associated with the nodes.
+** RETE :drill:
+:PROPERTIES:
+:ID:       623e4364-fbf5-4de7-9cac-87d7ca17bd36
+:END:
+Draw the RETE algorithm for the following rules:
+
+    (R1 (has-goal ?x simplify)
+        (expression ?x 0 + ?y)
+     ==>....)
+    (R2 (has-goal ?x simplify)
+        (expression ?x 0 * ?y)
+     ==>....)
+
+And the following facts:
+
+    (has-goal e1 simplicity)
+    (expression e1 0 + 3)
+    (has-goal e2 simplicity)
+    (expression e2 0 + 5)
+    (has-goal e3 simplicity)
+    (expression e3 0 * 2)
+
+
+*** Answer
+#+begin_src text
+                    +----------+
+                    | ENTRANCE |
+                    +----------+
+    x             /      |       \
+    =            /       |        \
+    e1          /        |         \                    y
+    e2  +----------+   +------------+   +------------+  =
+    e3  | HAS-GOAL |   |EXPRESSION *|   |EXPRESSION +|  3
+        +----------+   +------------+   +------------+  5
+         \              /                    |
+          \            / y                   |
+           \          /  =                   |
+            \        /   2                   |
+             \      /                        |
+     x y    +--------+                  +--------+  x y
+     ===    |        |                  |        |  ===
+    e3 2    +--------+                  +--------+ e1 3
+                |                               |  e2 5
+                |                               |
+                R2                              R1
+#+end_src
+** RETE :drill:
+:PROPERTIES:
+:ID:       921711c1-f90b-4d54-b990-58d64f193a2f
+:END:
+Draw a RETE diagram with TypeNodes, SelectNodes, AlphaNodes, AlphaMemory, BetaMemory, and Terminal Nodes.
+*** Answer
+Here is an example. Green dots are BetaNodes. Blue and Red are AlphaNodes.
+
+[[http://www.balasubramanyamlanka.com/wp-content/uploads/2016/05/rete-algorithm.png]]
+** RETE :drill:
+:PROPERTIES:
+:ID:       ec4ed5b5-fe89-493e-b474-7c066c737b6f
+:END:
+Whate are WMEs?
+*** Answer
+Working Memory Elements. The RETE engine creates
+a WME for each fact inserted into the network.
+** RETE :drill:
+:PROPERTIES:
+:ID:       c7aa189d-8fd4-438f-8e35-969caaada4f7
+:END:
+Where are one-input nods found?
+*** Answer
+One-input nodes are found in the Alpha Network. They
+terminate at a memory node, called Alpha Memory.
+
+
+
+* O'Doyle
+
+** O'Doyle :drill:
+SCHEDULED: <2021-02-20 Sat>
+:PROPERTIES:
+:ID:       8e5713d4-7225-4b52-af7e-eacfedd18a41
+:DRILL_LAST_INTERVAL: 3.86
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 3.0
+:DRILL_EASE: 2.36
+:DRILL_LAST_QUALITY: 3
+:DRILL_LAST_REVIEWED: [2021-02-16 Tue 18:19]
+:END:
+What do tokens consist of?
+*** Answer
+- Fact: [entity attr value]
+- kind: :insert | :retract | :update
+- old-fact: used for updating
+** O'Doyle :drill:
+SCHEDULED: <2021-02-20 Sat>
+:PROPERTIES:
+:ID:       760a6547-7a19-4b1a-bc32-ff6e17c510a6
+:DRILL_LAST_INTERVAL: 3.86
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 3.0
+:DRILL_EASE: 2.36
+:DRILL_LAST_QUALITY: 3
+:DRILL_LAST_REVIEWED: [2021-02-16 Tue 18:17]
+:END:
+When are Tokens created?
+*** Answer
+Tokens are created when upserting a fact, during insert
+ and after fetching Alpha Nodes.
+
+ We reduce over :id-attr-nodes and invoke `right-activate-alpha-nodes`
+ with the token.
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       12356712-63ae-42a1-9261-78615db804b3
+:END:
+What does `right-activate-node-path` do?
+*** Answer
+It takes the session, and `node-path`, and a `Token`. `node-path`
+is a path to a :id-attr-node
+
+...
+1.
+** O'Doyle :drill:
+SCHEDULED: <2021-02-20 Sat>
+:PROPERTIES:
+:ID:       40d360e0-14c0-43e0-af90-39fb2224f27f
+:DRILL_LAST_INTERVAL: 4.0
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 1
+:DRILL_FAILURE_COUNT: 0
+:DRILL_AVERAGE_QUALITY: 4.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 4
+:DRILL_LAST_REVIEWED: [2021-02-16 Tue 18:13]
+:END:
+What is an :id-attr-node? When do they get created?
+*** Answer
+They are created on :insert and :retract during `right-activate-alpha-node`
+and contain a set of `node-paths`.
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       15a028d3-604e-42b5-a47c-6cedad3306b3
+:END:
+What does a Session consist of?
+*** Answer
+A session consists of :alaph-node, :beta-node, :last-id, :rule-name->node-id,
+:node-id->rule-name, :id-attr-nodes, :then-queue, :then-finally-queue?
+** O'doyle :drill:
+SCHEDULED: <2021-02-21 Sun>
+:PROPERTIES:
+:ID:       0251237f-fe94-48e8-aa35-cad7052e0638
+:DRILL_LAST_INTERVAL: 3.86
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 2
+:DRILL_FAILURE_COUNT: 1
+:DRILL_AVERAGE_QUALITY: 2.0
+:DRILL_EASE: 2.36
+:DRILL_LAST_QUALITY: 3
+:DRILL_LAST_REVIEWED: [2021-02-17 Wed 15:15]
+:END:
+What does an AlphaNode consist of?
+*** Answer
+- path: get-in vector to reach the alpha node
+- test-field: :id | :attr | :value
+- test-value: anything
+- children: Vector of alpha nodes
+- Successors: vector of JoinNode ids.
+- facts: map of id -> (map of attr -> value)
+** O'Doyle :drill:
+SCHEDULED: <2021-02-21 Sun>
+:PROPERTIES:
+:ID:       c5a70568-4764-4311-81a8-0be1b7e81eb5
+:DRILL_LAST_INTERVAL: 4.0
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 2
+:DRILL_FAILURE_COUNT: 1
+:DRILL_AVERAGE_QUALITY: 2.5
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 4
+:DRILL_LAST_REVIEWED: [2021-02-17 Wed 15:15]
+:END:
+What are :beta-nodes
+*** Answer
+:beta-nodes are JoinNodes or MemoryNodes
+** O'Doyle :drill:
+SCHEDULED: <2021-02-21 Sun>
+:PROPERTIES:
+:ID:       104a1a90-e65b-4254-9176-3bc3547c1331
+:DRILL_LAST_INTERVAL: 3.86
+:DRILL_REPEATS_SINCE_FAIL: 2
+:DRILL_TOTAL_REPEATS: 2
+:DRILL_FAILURE_COUNT: 1
+:DRILL_AVERAGE_QUALITY: 2.5
+:DRILL_EASE: 2.36
+:DRILL_LAST_QUALITY: 3
+:DRILL_LAST_REVIEWED: [2021-02-17 Wed 16:14]
+:END:
+Describe the conditions under which :rules, :conditions, :beta-nodes and :alpha-nodes are created, removed, and updated.
+*** Answer
+Rules:
+- A rule is what the user literally writes. Consisting of a :what block, followed by optional :when, :then, :then-finally, etc.
+
+Conditions:
+- Conditions are created whenever a rule is compiled. There is a condition created for every entry in the :what block.
+
+Alpha nodes:
+- An AlphaNode is created every time a Condition is added. Each form in a the :body of a rule maps to three AlphaNodes. One AlphaNode is compiled for the :id field. One AlphaNode is compiled for the :attr field, and
+  one AlphaNode is compiled for the :value field.
+
+Bindings:
+- One binding is created for each :id, :attr, :value of each condition.
+
+BetaNodes:
+- A JoinNode is created for each Condition added. A single MemoryNode is also created for each Condition.
+  Each are added to the map of :beta-nodes in the session.
+
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       8c12669c-d08b-4c42-8eab-7a2fe56aa646
+:END:
+What does a MemoryNode consist of?
+*** Answer
+parent-id: JoinNode id
+child-id: JoinNode id
+leaf-node-id: Id of MemoryNode at end
+condition: a condition added via. add-condition
+matches: map of id+attr -> Match.
+when-fn: fn
+then-fn: fn
+then-finally-fn: fn
+trigger: boolean indicating that the then block can be triggered.
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       980c9eff-2b5f-4254-b0b0-6fa771e71848
+:END:
+Which nodes store :when, :then and :then-finally fns?
+*** Answer
+MemoryNodes
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       889111f5-8a46-4c09-b10e-998c45b365d2
+:END:
+What does `right-activate-join-node` do?
+*** Answer
+** O'doyle :drill:
+:PROPERTIES:
+:ID:       3febfd62-c6fd-45f1-8988-fad042ca742a
+:DRILL_LAST_INTERVAL: 0.0
+:DRILL_REPEATS_SINCE_FAIL: 1
+:DRILL_TOTAL_REPEATS: 2
+:DRILL_FAILURE_COUNT: 2
+:DRILL_AVERAGE_QUALITY: 2.0
+:DRILL_EASE: 2.5
+:DRILL_LAST_QUALITY: 2
+:DRILL_LAST_REVIEWED: [2021-02-17 Wed 19:47]
+:END:
+What does a Match consist of?
+*** Answer
+A match consists of:
+
+vars: a map of binding keywords -> values from facts. See `get-vars-from-fact`
+enabled: a boolean indicating whether this match should be returned from queries.
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       bb855e8f-d447-494d-be33-76c0dfc46482
+:END:
+What Does a condition consist of?
+*** Answer
+nodes: vector of AlphaNode
+bindings: vector of Binding
+opts: map of options
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       1763a43c-314b-4461-b73f-975158a96d95
+:END:
+What does a Rule consist of?
+*** Answer
+name: a keyword
+when-fn: fn
+then-fn: fn
+then-finally-fn: fn
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       46bdf6fc-369f-47eb-a58c-6456e0f8b852
+:END:
+What does a JoinNode consist of?
+*** Answer
+id:
+parent-id: MemoryNode id
+child-id: MemoryNode id
+alpha-node-path: the getin vector to reach the parent AlphaNode form the root
+condition: condition associated with this node
+id-key: The name of the id binding if we know it
+old-id-attrs: a set of id+attr so the node can keep track of which facts are "new"
+disable-fast-update: boolean indicating whether it is safe to do fast updates.
+** O'Doyle :drill:
+:PROPERTIES:
+:ID:       03bb4202-6ca4-4c10-b883-f30ee16bb5dc
+:END:
+Write the O'Doyle session graph for the following ruleset:
+
+#+begin_src clojure
+{::num-conds-and-facts
+ [:what
+  [b ::color "blue"]
+  [y ::left-of z]
+  [a ::color "maize"]
+  [y ::right-of b]
+  [x ::height h]
+  :then
+  (is (= a ::alice))
+  (is (= b ::bob))
+  (is (= y ::yair))
+  (is (= z ::zach))]}
+#+end_src
+
+*** Answer
+
+#+begin_src clojure
+{:alpha-node
+ {:path nil,
+  :test-field nil,
+  :test-value nil,
+  :children
+  [{:path [:alpha-node :children 0],
+    :test-field :attr,
+    :test-value :skyhook.reader-test/color,
+    :children
+    [{:path [:alpha-node :children 0 :children 0],
+      :test-field :value,
+      :test-value "blue",
+      :children [],
+      :successors (0),
+      :facts {}}
+     {:path [:alpha-node :children 0 :children 1],
+      :test-field :value,
+      :test-value "maize",
+      :children [],
+      :successors (4),
+      :facts {}}],
+    :successors [],
+    :facts {}}
+   {:path [:alpha-node :children 1],
+    :test-field :attr,
+    :test-value :skyhook.reader-test/left-of,
+    :children [],
+    :successors (2),
+    :facts {}}
+   {:path [:alpha-node :children 2],
+    :test-field :attr,
+    :test-value :skyhook.reader-test/right-of,
+    :children [],
+    :successors (6),
+    :facts {}}
+   {:path [:alpha-node :children 3],
+    :test-field :attr,
+    :test-value :skyhook.reader-test/height,
+    :children [],
+    :successors (8),
+    :facts {}}],
+  :successors [],
+  :facts {}},
+ :beta-nodes
+ {0
+  {:id 0,
+   :parent-id nil,
+   :child-id 1,
+   :alpha-node-path [:alpha-node :children 0 :children 0],
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/color,
+      :children [],
+      :successors [],
+      :facts {}}
+     {:path nil,
+      :test-field :value,
+      :test-value "blue",
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings [{:field :id, :sym 'b, :key :b}],
+    :opts nil},
+   :id-key :b,
+   :old-id-attrs #{},
+   :disable-fast-updates false},
+  1
+  {:id 1,
+   :parent-id 0,
+   :child-id 2,
+   :leaf-node-id 9,
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/color,
+      :children [],
+      :successors [],
+      :facts {}}
+     {:path nil,
+      :test-field :value,
+      :test-value "blue",
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings [{:field :id, :sym 'b, :key :b}],
+    :opts nil},
+   :matches {},
+   :when-fn nil,
+   :then-fn nil,
+   :then-finally-fn nil,
+   :trigger false},
+  2
+  {:id 2,
+   :parent-id 1,
+   :child-id 3,
+   :alpha-node-path [:alpha-node :children 1],
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/left-of,
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings
+    [{:field :id, :sym 'y, :key :y} {:field :value, :sym 'z, :key :z}],
+    :opts nil},
+   :id-key :y,
+   :old-id-attrs #{},
+   :disable-fast-updates false},
+  3
+  {:id 3,
+   :parent-id 2,
+   :child-id 4,
+   :leaf-node-id 9,
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/left-of,
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings
+    [{:field :id, :sym 'y, :key :y} {:field :value, :sym 'z, :key :z}],
+    :opts nil},
+   :matches {},
+   :when-fn nil,
+   :then-fn nil,
+   :then-finally-fn nil,
+   :trigger false},
+  4
+  {:id 4,
+   :parent-id 3,
+   :child-id 5,
+   :alpha-node-path [:alpha-node :children 0 :children 1],
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/color,
+      :children [],
+      :successors [],
+      :facts {}}
+     {:path nil,
+      :test-field :value,
+      :test-value "maize",
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings [{:field :id, :sym 'a, :key :a}],
+    :opts nil},
+   :id-key nil,
+   :old-id-attrs #{},
+   :disable-fast-updates false},
+  5
+  {:id 5,
+   :parent-id 4,
+   :child-id 6,
+   :leaf-node-id 9,
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/color,
+      :children [],
+      :successors [],
+      :facts {}}
+     {:path nil,
+      :test-field :value,
+      :test-value "maize",
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings [{:field :id, :sym 'a, :key :a}],
+    :opts nil},
+   :matches {},
+   :when-fn nil,
+   :then-fn nil,
+   :then-finally-fn nil,
+   :trigger false},
+  6
+  {:id 6,
+   :parent-id 5,
+   :child-id 7,
+   :alpha-node-path [:alpha-node :children 2],
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/right-of,
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings
+    [{:field :id, :sym 'y, :key :y} {:field :value, :sym 'b, :key :b}],
+    :opts nil},
+   :id-key :y,
+   :old-id-attrs #{},
+   :disable-fast-updates true},
+  7
+  {:id 7,
+   :parent-id 6,
+   :child-id 8,
+   :leaf-node-id 9,
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/right-of,
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings
+    [{:field :id, :sym 'y, :key :y} {:field :value, :sym 'b, :key :b}],
+    :opts nil},
+   :matches {},
+   :when-fn nil,
+   :then-fn nil,
+   :then-finally-fn nil,
+   :trigger false},
+  8
+  {:id 8,
+   :parent-id 7,
+   :child-id 9,
+   :alpha-node-path [:alpha-node :children 3],
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/height,
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings
+    [{:field :id, :sym 'x, :key :x}
+     {:field :value, :sym 'h, :key :h}],
+    :opts nil},
+   :id-key nil,
+   :old-id-attrs #{},
+   :disable-fast-updates false},
+  9
+  {:id 9,
+   :parent-id 8,
+   :child-id nil,
+   :leaf-node-id 9,
+   :condition
+   {:nodes
+    [{:path nil,
+      :test-field :attr,
+      :test-value :skyhook.reader-test/height,
+      :children [],
+      :successors [],
+      :facts {}}],
+    :bindings
+    [{:field :id, :sym 'x, :key :x} {:field :value, :sym 'h, :key :h}],
+    :opts nil},
+   :matches {},
+   :when-fn nil,
+   :then-fn #object[skyhook$reader_test$skyhook_reader_test_num_conds_and_facts],
+   :then-finally-fn nil,
+   :trigger false}},
+ :last-id 9,
+ :rule-name->node-id {:skyhook.reader-test/num-conds-and-facts 9},
+ :node-id->rule-name {9 :skyhook.reader-test/num-conds-and-facts},
+ :id-attr-nodes {},
+ :then-queue #{},
+ :then-finally-queue #{}}
+#+end_src
+** O'Doyle :drill:
+How do bindings work in O'Doyle?

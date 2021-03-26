@@ -1,0 +1,55 @@
+#+TITLE: Strings
+
+* Strings :Combinatorics:drill:
+Find the common substrings of two strings.
+** Answer
+#+begin_src clojure
+(defn common-substrings [s1 s2]
+  (let [s1-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s1))
+        s2-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s2))]
+    (for [[c1 is] s1-starts
+          i1 is
+          i2 (s2-starts c1)
+          j2 (range (inc i2) (count s2))
+          :while (<= (+ i1 (- j2 i2)) (count s1))
+          ;; :while (= (.substring s2 i2 j2)
+          ;;           (.substring s1 i1 (- j2 i2)))
+          ]
+      (.substring s2 i2 j2))))
+
+(common-substrings "xab" "yab")
+
+(defn common-substrings [s1 s2]
+  (let [s1-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s1))
+        s2-starts (reduce (fn [ret [i c]]
+                            (update ret c #(conj (or % []) i)))
+                          {}
+                          (map-indexed vector s2))]))
+
+(defn common-substrings [s1 s2]
+  (loop [[c & cs] s1
+         ret #{}]
+    (if (nil? c)
+      (disj ret "")
+      (let [[l r] (loop [[c1 & cs1] (cons c cs)
+                         [c2 & cs2] s2
+                         s []]
+                    (cond (nil? c2) [(count s) (conj ret (apply str s))]
+                          (= c1 c2) (recur cs1 cs2 (conj s c1))
+                          :else (recur (cons c cs) cs2 s)))]
+        (recur (drop l (cons c cs)) r)))))
+
+;; Insanely slow.
+
+(common-substrings "xabx" "yabx")
+
+#+end_src

@@ -1,0 +1,8 @@
+#+TITLE: Math
+
+* GCD :drill:
+   :PROPERTIES:
+   :ID:       97f1884a-8389-418a-b392-929fb703b392
+   :END:
+Write a function that calculates the GCD of two numbers.
+** Answer
