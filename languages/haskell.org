@@ -1,0 +1,26 @@
+#+TITLE: Haskell
+Not much here yet.
+
+* Haskell
+** Install
+   :LOGBOOK:
+   CLOCK: [2018-11-17 Sat 13:16]--[2018-11-17 Sat 14:36] =>  1:20
+   - installed
+   :END:
+#+BEGIN_SRC bash
+sudo apt-get install haskell-platform
+#+END_SRC
+
+#+RESULTS:
+
+** Factorial
+
+#+BEGIN_SRC haskell
+  let fac n = if n == 0 then 1 else n * fac (n-1)
+  fac 5
+#+END_SRC
+
+#+BEGIN_SRC haskell
+  let x = "test"
+  putStrLn x
+#+END_SRC

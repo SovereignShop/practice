@@ -1,0 +1,3808 @@
+#+TITLE: CPP
+
+* C++
+** Enum
+
+#+BEGIN_SRC cpp :includes '(<iostream>)
+enum colors_t {black, blue, green, cyan, red, purple, yellow, white};
+
+int main () {
+  cout << (colors_t::black == colors_t::green) << endl;
+  cout << (colors_t::green == colors_t::green) << endl;
+}
+#+END_SRC
+
+#+RESULTS:
+
+** Character Sequences
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+#include <string>
+using namespace std;
+
+int main ()
+{
+  char question1[] = "What is your name? ";
+  // question1 = "Wrong value"; arrays cannot be assigned values
+  string question2 = "wrong value";
+  question2 = "Where do you live? ";
+  char answer1 [80];
+  string answer2; cout << question1;
+  cin >> answer1;
+  cout << question2;
+  cin >> answer2;
+  cout << "Hello, " << answer1;
+  cout << " from " << answer2 << "!\n";
+
+  // Note that arrays cannot be assigned values
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+| What is your name? Where do you live? Hello | è` from ! |
+
+** Move Semantics
+
+source:  http://thbecker.net/articles/rvalue_references/section_02.html
+
+*** Move Semantics :drill:
+    :PROPERTIES:
+    :ID:       1ca37983-047f-4b86-9ecf-cd347cfebac5
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 6
+    :DRILL_FAILURE_COUNT: 6
+    :DRILL_AVERAGE_QUALITY: 1.333
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 1
+    :DRILL_LAST_REVIEWED: [2020-07-29 Wed 12:26]
+    :END:
+
+What three things does the last line do?
+#+BEGIN_SRC c++
+X foo();
+X x;
+x = foo();
+#+END_SRC
+
+What is the downside of this operation? Can you write code to demonstrate
+each constructor and destructor that is called?
+
+**** Answer
+
+1. clones the resource from the temporary returned by foo
+2. destructs the resource held by x and replaces it with the clone,
+3. destructs the temporary and thereby releases its resource.
+
+It would be okay and much more efficient to swap resource pointers
+(handles) between x and the temporary, and then let the temporary's
+destructor destruct x's original resource.
+
+**** Notes
+
+In cpp, the above can be achieved with the following overload
+#+BEGIN_SRC cpp
+X& X::operator=(<mystery type> rhs)
+{
+  // [...]
+  // swap this->m_pResource and rhs.m_pResource
+  // [...]
+}
+#+END_SRC
+
+That is, we overload the asisgnment operator ot capture this particular case.
+Just swap <mystery type> with a rvalue reference.
+
+** lvalues, rvalues
+*** C Definition :drill:
+    SCHEDULED: <2018-11-25 Sun>
+    :PROPERTIES:
+    :ID:       a0acdc3d-79b7-4e69-a8ad-6cae791cfcfd
+    :DRILL_LAST_INTERVAL: 4.0
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 2
+    :DRILL_FAILURE_COUNT: 1
+    :DRILL_AVERAGE_QUALITY: 2.5
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 4
+    :DRILL_LAST_REVIEWED: [2018-11-21 Wed 09:58]
+    :END:
+
+What is the original definition of lvalues and rvalues from the earliest days of C?
+
+**** Answer
+
+An /lvalue/ is expression that may appear on the left or right hand side
+of an assignment, whereas an /rvalue/ is an expression that can only appear
+on the right side.
+
+**** Example
+
+#+BEGIN_SRC cpp :flags -std=c++11
+int a = 42;
+int b = 43;
+
+// a and b are both l-values:
+a = b;     // ok
+b = a;     // ok
+a = a * b; // ok
+
+// a * b is an rvalue:
+int c = a * b; // ok, rvalue on right hand side of assignment
+a * b = 42; // error, rvalue on left hand side of assignment
+#+END_SRC
+
+*** c++11 lvalues :drill:
+SCHEDULED: <2018-12-08 Sat>
+    :PROPERTIES:
+    :ID:       cb7c36a0-2469-4c57-96bd-0295115aa471
+    :DRILL_LAST_INTERVAL: 10.764
+    :DRILL_REPEATS_SINCE_FAIL: 3
+    :DRILL_TOTAL_REPEATS: 4
+    :DRILL_FAILURE_COUNT: 2
+    :DRILL_AVERAGE_QUALITY: 3.0
+    :DRILL_EASE: 2.6
+    :DRILL_LAST_QUALITY: 4
+    :DRILL_LAST_REVIEWED: [2018-11-27 Tue 11:14]
+    :END:
+
+What is a reasonable definition of an lvalue in c++11?
+
+**** Answer
+
+An lvalue is an expression that refers to a memory location and allows
+us to take the address of that memory location via the & operator.
+
+**** Examples
+
+#+BEGIN_SRC c++
+// lvalues:
+
+int i = 42;
+i = 43; // ok, i is an lvalue
+int* p = &i; // ok, i is an lvalue
+int& foo();
+foo() = 42; // ok, foo() is an lvalue
+int* p1 = &foo(); // ok, foo() is an lvalue
+
+// rvalues:
+//
+int foobar();
+int j = 0;
+j = foobar(); // ok, foobar() is an rvalue
+int* p2 = &foobar(); // error, cannot take the address of an rvalue
+j = 42; // ok, 42 is an rvalue
+#+END_SRC
+
+*** Lvalues :drill:
+    SCHEDULED: <2019-03-20 Wed>
+    :PROPERTIES:
+    :ID:       8d31fdda-c61a-4a33-97b1-034d55eaad0f
+    :DRILL_LAST_INTERVAL: 3.725
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 1
+    :DRILL_AVERAGE_QUALITY: 2.667
+    :DRILL_EASE: 2.22
+    :DRILL_LAST_QUALITY: 3
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:19]
+    :END:
+
+Is i an lvalue in the following expression? Why?
+#+BEGIN_SRC cpp :flags -std=c++11
+int i = 42;
+i = 43;
+int* p = &i;
+#+END_SRC
+
+**** Answer
+
+Yes, it's an lvalue because it is an expression that refers
+to a memory location and you can take the address of it.
+
+** Named Requirements
+*** reference
+
+https://en.cppreference.com/w/cpp/language/move_constructor
+https://en.cppreference.com/w/cpp/language/copy_constructor
+
+*** Move Constructors :drill:
+    SCHEDULED: <2018-12-01 Sat>
+    :PROPERTIES:
+    :ID:       0b415784-981a-4e3b-84ee-e27c17277b06
+    :DRILL_LAST_INTERVAL: 4.0
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 2
+    :DRILL_AVERAGE_QUALITY: 1.667
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 4
+    :DRILL_LAST_REVIEWED: [2018-11-27 Tue 10:56]
+    :END:
+
+What is the syntax for Move Constructors?
+
+**** Answer
+
+class_name ( class_name && ) 	            (1) 	(since C++11)
+class_name ( class_name && ) = default; 	(2) 	(since C++11)
+class_name ( class_name && ) = delete;   	(3) 	(since C++11
+
+*** Move Constructors :drill:
+    SCHEDULED: <2019-03-20 Wed>
+    :PROPERTIES:
+    :ID:       9a39c9ee-5e25-4453-8afd-9a4a1af8d3cf
+    :DRILL_LAST_INTERVAL: 3.86
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 4
+    :DRILL_FAILURE_COUNT: 3
+    :DRILL_AVERAGE_QUALITY: 1.25
+    :DRILL_EASE: 2.36
+    :DRILL_LAST_QUALITY: 3
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:11]
+    :END:
+
+Under what three conditions is the move constructor typically invoked?
+
+**** Answer
+
+The move constructor is typically called when an object is initialized
+from an rvalue of the same type, including:
+
+- initialization: T a = std::move(b); or T a(std::move(b));, where b is of type T;
+- function argument passing: f(std::move(a));, where a is of type T and f is void f(T t);
+- function return: return a; inside a function such as T f(), where a is of type T which has a move constructor.
+
+*** Move constructors :drill:
+    SCHEDULED: <2019-03-20 Wed>
+    :PROPERTIES:
+    :ID:       f9729575-e9ad-4f7f-b76d-62ee5470af26
+    :DRILL_LAST_INTERVAL: 3.86
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 4
+    :DRILL_FAILURE_COUNT: 2
+    :DRILL_AVERAGE_QUALITY: 2.75
+    :DRILL_EASE: 2.36
+    :DRILL_LAST_QUALITY: 3
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:12]
+    :END:
+
+What are the typical "resource semantics" of move constructors?
+
+**** Answer
+
+Move constructors typically "steal" the resources held by the argument (e.g. pointers to
+dynamically-allocated objects, file descriptors, TCP sockets, I/O streams, running threads, etc.)
+
+*** Move constructors :drill:
+    :PROPERTIES:
+    :ID:       638b52ff-2892-42df-8a75-73803aee479b
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 4
+    :DRILL_FAILURE_COUNT: 3
+    :DRILL_AVERAGE_QUALITY: 2.0
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 1
+    :DRILL_LAST_REVIEWED: [2020-07-29 Wed 12:24]
+    :END:
+
+What is the fate of arguments to move constructors?
+
+**** Answer
+
+Often is not well specified. For some types, like std::unique_ptr the semantics
+of moving are completely specified. In general, don't reference values that have
+been moved.
+
+*** Copy Constructable :drill:
+    :PROPERTIES:
+    :ID:       e01a8af7-0738-4cb1-8b25-43997a0da3c9
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 4
+    :DRILL_FAILURE_COUNT: 4
+    :DRILL_AVERAGE_QUALITY: 1.25
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 2
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:16]
+    :END:
+
+Under what conditions does a type T satisfy Copy
+Constructable?
+
+**** Answer
+
+1. The type T satisfies MoveConstructible
+2. Given,
+ - v, an lvalue expression of type T or const T or an rvalue expression of type const T
+ - u, an arbitrary identifier
+
+ the following expressions must be valid and have their specified effects
+
+ | Expression | Post-conditions                                                                 |
+ +------------+---------------------------------------------------------------------------------+
+ | T u = v 	  | The value of u is equivalent to the value of v The value of v is unchanged     |
+ +------------+---------------------------------------------------------------------------------+
+ | T(v)       | The value of T(v) is equivalent to the value of v. The value of v is unchanged. |
+
+** Shared Pointers
+*** Examples
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++17 -pthread :results raw
+  #include <iostream>
+  #include <memory>
+  #include <thread>
+  #include <chrono>
+  #include <mutex>
+
+  struct Base
+  {
+      Base() { std::cout << "  Base::Base()\n"; }
+      // Note: non-virtual destructor is OK here
+      ~Base() { std::cout << "  Base::~Base()\n"; }
+  };
+
+  struct Derived: public Base
+  {
+      Derived() { std::cout << "  Derived::Derived()\n"; }
+      ~Derived() { std::cout << "  Derived::~Derived()\n"; }
+  };
+
+  void thr(std::shared_ptr<Base> p)
+  {
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      std::shared_ptr<Base> lp = p; // thread-safe, even though the
+                                    // shared use_count is incremented
+      {
+          static std::mutex io_mutex;
+          std::lock_guard<std::mutex> lk(io_mutex);
+          std::cout << "local pointer in a thread:\n"
+                    << "  lp.get() = " << lp.get()
+                    << ", lp.use_count() = " << lp.use_count() << '\n';
+      }
+  }
+
+  int main()
+  {
+      std::shared_ptr<Base> p = std::make_shared<Derived>();
+
+      std::cout << "Created a shared Derived (as a pointer to Base)\n"
+                << "  p.get() = " << p.get()
+                << ", p.use_count() = " << p.use_count() << '\n';
+      std::thread t1(thr, p), t2(thr, p), t3(thr, p);
+      p.reset(); // release ownership from main
+      std::cout << "Shared ownership between 3 threads and released\n"
+                << "ownership from main:\n"
+                << "  p.get() = " << p.get()
+                << ", p.use_count() = " << p.use_count() << '\n';
+      t1.join(); t2.join(); t3.join();
+
+      std::cout << "All threads completed, the last one deleted Derived\n";
+  }
+#+END_SRC
+
+#+RESULTS:
+Base::Base()
+  Derived::Derived()
+Created a shared Derived (as a pointer to Base)
+  p.get() = 0xda0c30, p.use_count() = 1
+Shared ownership between 3 threads and released
+ownership from main:
+  p.get() = 0, p.use_count() = 0
+local pointer in a thread:
+  lp.get() = 0xda0c30, lp.use_count() = 4
+local pointer in a thread:
+  lp.get() = 0xda0c30, lp.use_count() = 4
+local pointer in a thread:
+  lp.get() = 0xda0c30, lp.use_count() = 2
+  Derived::~Derived()
+  Base::~Base()
+All threads completed, the last one deleted Derived
+
+*** Shared Pointers :drill:
+    :PROPERTIES:
+    :ID:       c1d6b36b-132e-44e8-b884-56ab4cc84527
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 6
+    :DRILL_FAILURE_COUNT: 5
+    :DRILL_AVERAGE_QUALITY: 1.5
+    :DRILL_EASE: 2.36
+    :DRILL_LAST_QUALITY: 2
+    :DRILL_LAST_REVIEWED: [2020-07-29 Wed 12:25]
+    :END:
+
+when is the object destroyed and its memory deallocated?
+
+**** Answer
+
+the last remaining shared_ptr owning the object is destroyed
+the last remaining shared_ptr owning the object is assigned another pointer via operator= or reset().
+
+*** Shared Pointers :drill:
+    SCHEDULED: <2018-12-01 Sat>
+    :PROPERTIES:
+    :ID:       6221b753-3e05-4db0-80f6-5f0b6e97c515
+    :DRILL_LAST_INTERVAL: 4.0
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 2
+    :DRILL_FAILURE_COUNT: 1
+    :DRILL_AVERAGE_QUALITY: 2.5
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 4
+    :DRILL_LAST_REVIEWED: [2018-11-27 Tue 11:00]
+    :END:
+
+How do you access the value of a shared pointer?
+
+| A | asdf |
+
+| a |           |   |   |
+|---+-----------+---+---|
+|   | 123132421 |   |   |
+|   |           |   |   |
+|   |           |   |   |
+
+
+#+begin_src python
+
+def hello_world():
+    print("hello")
+
+[1,2,3]
+#+end_src
+
+#+RESULTS:
+: None
+
+
+**** Answer
+
+the .get() method on shared pointers.
+
+*** Shared Pointers :drill:
+    :PROPERTIES:
+    :ID:       47b4791a-b526-458d-825b-0d691dc3add6
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 5
+    :DRILL_FAILURE_COUNT: 5
+    :DRILL_AVERAGE_QUALITY: 1.2
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 1
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:11]
+    :END:
+
+What "Named Requirements" do shared pointers satisfy? Why?
+
+**** Answer
+
+ CopyConstructible, CopyAssignable, and LessThanComparable.
+
+**** Example
+*** Shared Pointers :drill:
+    :PROPERTIES:
+    :ID:       4de950d2-9e06-4a4c-b36d-7884dad71c0a
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 2
+    :DRILL_AVERAGE_QUALITY: 1.667
+    :DRILL_EASE: 2.36
+    :DRILL_LAST_QUALITY: 2
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:23]
+    :END:
+
+What is a shared pointer? What is it often used for?
+
+**** Answer
+
+The shared_pointer is a reference counting smart pointer that can be used
+to store and pass a reference beyond the scope of a function
+
+** Temporary Objects
+*** Temporary Objects :drill:
+    :PROPERTIES:
+    :ID:       a1eb9797-56a0-4378-8859-52ab2b2b4f87
+    :END:
+
+When are temporary objects created?
+
+**** Answer
+
+Temporary objects are created when a prvalue is materialized so that it can
+be used as a glvalue, which occurs (since C++17) in the following situations:
+
+- until c++17
+  - returning a prvalue from a function
+  - conversion that creates a prvalue (including T(a,b,c) and T{})
+  - lambda expression, (since C++11)
+  - copy-initialization that requires conversion of the initializer,
+  - list-initialization that constructs an std::initializer_list, (since C++11)
+  - reference-initialization to a different but convertible type or to a bitfield.
+- since c++17
+  - n initializing an object of type std::initializer_list<T> from a braced-init-list
+  - when performing member access on a class prvalue
+  - when performing an array-to-pointer conversion or subscripting on an array prvalue
+  -  for unevaluated operands in sizeof and typeid
+  - when a prvalue appears as a discarded-value expression
+  - if supported by the implementation, when passing or returning an object of
+    trivially-copyable type in a function call expression (this models passing structs in CPU registers)
+
+** Unique Pointers
+*** TODO Demo
+
+Need to make questions out of this...
+#+BEGIN_SRC cpp
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <cstdio>
+#include <fstream>
+#include <cassert>
+#include <functional>
+
+struct B {
+  virtual void bar() { std::cout << "B::bar\n"; }
+  virtual ~B() = default;
+};
+struct D : B
+{
+    D() { std::cout << "D::D\n";  }
+    ~D() { std::cout << "D::~D\n";  }
+    void bar() override { std::cout << "D::bar\n";  }
+};
+
+// a function consuming a unique_ptr can take it by value or by rvalue reference
+std::unique_ptr<D> pass_through(std::unique_ptr<D> p)
+{
+    p->bar();
+    return p;
+}
+
+void close_file(std::FILE* fp) { std::fclose(fp); }
+
+int main()
+{
+  std::cout << "unique ownership semantics demo\n";
+  {
+      auto p = std::make_unique<D>(); // p is a unique_ptr that owns a D
+      auto q = pass_through(std::move(p));
+      assert(!p); // now p owns nothing and holds a null pointer
+      q->bar();   // and q owns the D object
+  } // ~D called here
+
+  std::cout << "Runtime polymorphism demo\n";
+  {
+    std::unique_ptr<B> p = std::make_unique<D>(); // p is a unique_ptr that owns a D
+                                                  // as a pointer to base
+    p->bar(); // virtual dispatch
+
+    std::vector<std::unique_ptr<B>> v;  // unique_ptr can be stored in a container
+    v.push_back(std::make_unique<D>());
+    v.push_back(std::move(p));
+    v.emplace_back(new D);
+    for(auto& p: v) p->bar(); // virtual dispatch
+  } // ~D called 3 times
+
+  std::cout << "Custom deleter demo\n";
+  std::ofstream("demo.txt") << 'x'; // prepare the file to read
+  {
+      std::unique_ptr<std::FILE, decltype(&close_file)> fp(std::fopen("demo.txt", "r"),
+                                                           &close_file);
+      if(fp) // fopen could have failed; in which case fp holds a null pointer
+        std::cout << (char)std::fgetc(fp.get()) << '\n';
+  } // fclose() called here, but only if FILE* is not a null pointer
+    // (that is, if fopen succeeded)
+
+  std::cout << "Custom lambda-expression deleter demo\n";
+  {
+    std::unique_ptr<D, std::function<void(D*)>> p(new D, [](D* ptr)
+        {
+            std::cout << "destroying from a custom deleter...\n";
+            delete ptr;
+        });  // p owns D
+    p->bar();
+  } // the lambda above is called and D is destroyed
+
+  std::cout << "Array form of unique_ptr demo\n";
+  {
+      std::unique_ptr<D[]> p{new D[3]};
+  } // calls ~D 3 times
+}
+#+END_SRC
+
+*** Unique Pointers :drill:
+    SCHEDULED: <2019-03-20 Wed>
+    :PROPERTIES:
+    :ID:       e5e0d89a-ce9f-4fe2-954f-f9b33d557eb2
+    :DRILL_LAST_INTERVAL: 3.86
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 2
+    :DRILL_AVERAGE_QUALITY: 2.333
+    :DRILL_EASE: 2.36
+    :DRILL_LAST_QUALITY: 3
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:23]
+    :END:
+
+What the the high-level definition of a unique pointer?
+
+**** Answer
+
+std::unique_ptr is a smart pointer that owns and manages another object
+through a pointer and disposes of that object when the unique_ptr goes out of scope.
+
+*** Unique Pointers :drill:
+    :PROPERTIES:
+    :ID:       bde42f18-989a-421f-9083-0ebeb52cdf59
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 3
+    :DRILL_AVERAGE_QUALITY: 1.333
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 2
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:12]
+    :END:
+
+When does the unique pointer dispose of the object it manages?
+
+**** Answer
+
+The object is disposed of using the associated deleter when either of the following happens:
+
+- the managing unique_ptr object is destroyed
+- the managing unique_ptr object is assigned another pointer via operator= or reset().
+
+*** Unique Pointers :drill:
+    :PROPERTIES:
+    :ID:       6e6591ac-d747-4ecf-860e-b400650fa531
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 3
+    :DRILL_AVERAGE_QUALITY: 0.333
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 0
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:18]
+    :END:
+
+What are the two versions of unique pointers
+
+**** Answer
+
+1) Manages a single object (e.g. allocated with new)
+2) Manages a dynamically-allocated array of objects (e.g. allocated with new[])
+
+*** Unique Pointers :drill:
+    :PROPERTIES:
+    :ID:       b1fb5716-c337-4855-b3e2-3684fe5749e1
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 4
+    :DRILL_FAILURE_COUNT: 4
+    :DRILL_AVERAGE_QUALITY: 1.25
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 2
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:13]
+    :END:
+
+What are the type requirements of Unique pointers?
+
+**** Answer
+
+Deleter must be FunctionObject or lvalue reference to a FunctionObject
+or lvalue reference to function, callable with an argument of type
+unique_ptr<T, Deleter>::pointer
+
+*** Unique Pointers :drill:
+    :PROPERTIES:
+    :ID:       a3c8e43a-834c-47ee-8ac7-647713190193
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 3
+    :DRILL_AVERAGE_QUALITY: 1.0
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 1
+    :DRILL_LAST_REVIEWED: [2019-03-16 Sat 14:20]
+    :END:
+
+Unique pointers are commonly used to manage the lifetime of objects, including...
+
+**** Answer
+
+- Providing exception safety to classes and functions that handle objects with dynamic
+  lifetime, by guaranteeing deletion on both normal exit and exit through exception
+- Passing ownership of uniquely-owned objects with dynamic lifetime into functions
+- Acquiring ownership of uniquely-owned objects with dynamic lifetime from functions
+- As the element type in move-aware containers, such as std::vector, which hold pointers
+  to dynamically-allocated objects (e.g. if polymorphic behavior is desired)
+
+*** Unique Pointers :drill:
+    SCHEDULED: <2018-12-06 Thu>
+    :PROPERTIES:
+    :ID:       0741cb8e-e695-44df-ac31-fe95a04c9f20
+    :DRILL_LAST_INTERVAL: 8.7892
+    :DRILL_REPEATS_SINCE_FAIL: 3
+    :DRILL_TOTAL_REPEATS: 2
+    :DRILL_FAILURE_COUNT: 0
+    :DRILL_AVERAGE_QUALITY: 3.0
+    :DRILL_EASE: 2.22
+    :DRILL_LAST_QUALITY: 3
+    :DRILL_LAST_REVIEWED: [2018-11-27 Tue 11:14]
+    :END:
+
+What do unique pointers do, as impled by the name?
+
+**** Answer
+
+Make sure that only exactly one copy of an
+object exists.
+
+** Smart Pointers
+
+Here's an example of why we have smart pointers
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+void my_func()
+{
+    int* valuePtr = new int(15);
+    int x = 45;
+    // ...
+    if (x == 45)
+        return;   // here we have a memory leak, valuePtr is not deleted
+    // ...
+    delete valuePtr;
+}
+
+int main()
+{
+}
+#+END_SRC
+
+#+RESULTS:
+
+If we use unique pointers, we don't leak:
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+  #include <memory>
+
+  void my_func()
+  {
+      std::unique_ptr<int> valuePtr(new int(15));
+      int x = 45;
+      // ...
+      if (x == 45)
+          return;   // no memory leak anymore!
+      // ...
+  }
+
+  int main()
+  {
+  }
+#+END_SRC
+
+#+RESULTS:
+
+** Classes
+*** Basics
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+class Rectangle {
+  // these are privates (default)
+  int width, height;
+public:
+  void set_values (int,int);
+  int area () {return width*height;};
+};
+
+void Rectangle::set_values(int x, int y) {
+  width = x;
+  height = y;
+}
+
+int main(int status, char** argv) {
+  Rectangle rect;
+  rect.set_values(10, 4);
+  cout << "Area: " << rect.area() << endl;
+}
+#+END_SRC
+
+#+RESULTS:
+: Area: 40
+
+*** Construction 1 :drill:
+    :PROPERTIES:
+    :ID:       74c0c0da-c372-4075-898a-f7d63b7c4128
+    :END:
+
+Write a program illustrating the 4 different forms of construction.
+What are their names?
+
+**** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+  // classes and uniform initialization
+  #include <iostream>
+  using namespace std;
+
+  class Circle {
+    double radius{60};
+  public:
+    Circle(double r)
+      : radius(r) //
+    { }
+    double circum() {return 2*radius*3.14159265;}
+  };
+
+  int main () {
+    Circle foo (10.0);   // functional form
+    Circle bar = 20.0;   // assignment init.
+    Circle baz {30.0};   // uniform init.
+    Circle qux = {40.0}; // POD-like
+
+    cout << "foo's circumference: " << bar.circum() << '\n';
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: foo's circumference: 125.664
+
+*** Construction 2 :drill:
+    :PROPERTIES:
+    :ID:       f1d633cc-d973-456e-8cfc-ee71dc4290ce
+    :END:
+
+Write a program illustrating use of a default constructor,
+copy constructor, move constructor, and constructor
+with default trailing arguments.
+
+When is the copy constructor invoked?
+When is the move constructor invoked?
+
+**** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results replace raw
+  #include <iostream>
+  using namespace std;
+
+  class complx {
+    double re, im;
+  public:
+
+    // default constructor
+    complx() : re(0), im(0) { }
+
+    // move constructor
+    complx(const complx&& c) {
+      cout << "Move Constructor Invoked" << endl;
+    }
+
+    // copy constructor
+    complx(const complx& c) { re = c.re; im = c.im; }
+
+    // constructor with default trailing argument
+    complx( double r, double i = 0.0) { re = r; im = i; }
+
+    void display() {
+      cout << "re = "<< re << " im = " << im << endl;
+    }
+  };
+
+  int main() {
+
+    // initialize with complx(double, double)
+    complx one(1);
+
+    // initialize with a copy of one
+    // using complx::complx(const complx&)
+    complx two = one;
+
+    // construct complx(3,4)
+    // directly into three
+    complx three = complx(3,4);
+
+    // initialize with default constructor
+    complx four;
+
+    // complx(double, double) and construct
+    // directly into five
+    complx five = 5;
+
+    complx six = move(five);
+
+    one.display();
+    two.display();
+    three.display();
+    four.display();
+    five.display();
+  }
+#+END_SRC
+
+#+RESULTS:
+Move Constructor Invoked
+re = 1 im = 0
+re = 1 im = 0
+re = 3 im = 4
+re = 0 im = 0
+re = 5 im = 0
+
+This example illustrates explicit initialization
+by constructor.
+
+*** Destruction 1 :drill:
+    :PROPERTIES:
+    :ID:       5fae0c52-a904-480c-9843-a67f027dd929
+    :END:
+
+Write a clas and main method illustrating use of delete constructor.
+
+**** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+  #include <string.h>
+
+  class Y {
+  private:
+    char * string;
+    int number;
+  public:
+    // Constructor
+    Y(const char*, int);
+    // Destructor
+    ~Y() { delete[] string; }
+  };
+
+  // Define class Y constructor
+  Y::Y(const char* n, int a) {
+    string = strcpy(new char[strlen(n) + 1 ], n);
+    number = a;
+  }
+
+  int main () {
+    // Create and initialize
+    // object of class Y
+    Y yobj = Y("somestring", 10);
+
+    // Destructor ~Y is called before
+    // control returns from main()
+  }
+#+END_SRC
+
+#+RESULTS:
+
+*** Destructor 2 :drill:
+    :PROPERTIES:
+    :ID:       546f902e-0413-4d55-9871-0e3c2047cac5
+    :END:
+
+Write a simple program illustrating delete of array primitive type.
+
+**** Answer
+
+#+BEGIN_SRC cpp
+  #include <iostream>
+
+  int main() {
+    int* set = new int[100];
+    for (int i = 0; i < 100; i++) {
+      set[i] = 10;
+    }
+
+    //use set[]
+    delete [] set;
+
+    // Notice the element hasn't changed. We've
+    // just told the compiler that the runtime that
+    // the resource is free to be reused.
+    std::cout << "10th elem: " << set[10];
+  }
+#+END_SRC
+
+#+RESULTS:
+: 10th elem: 10
+
+*** Derivation
+****
+*** Virtual Functions
+**** Intro
+
+Virtual functions are primarily used for run-time
+polymorphism. Consider the following example:
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+// CPP program to illustrate
+// concept of Virtual Functions
+#include<iostream>
+using namespace std;
+
+class base
+{
+public:
+    virtual void print ()
+    { cout<< "print base class" <<endl; }
+
+    void show ()
+    { cout<< "show base class" <<endl; }
+};
+
+class derived:public base
+{
+public:
+    void print ()
+    { cout<< "print derived class" <<endl; }
+
+    void show ()
+    { cout<< "show derived class" <<endl; }
+};
+
+int main()
+{
+    base *bptr;
+    derived d;
+    // bptr = &d;
+
+    //virtual function, binded at runtime
+    bptr->print();
+
+    // Non-virtual function, binded at compile time
+    bptr->show();
+}
+#+END_SRC
+
+**** Virtual Functions :drill:
+     :PROPERTIES:
+     :ID:       92628da5-de69-41e9-857a-afcfe2232eec
+     :END:
+
+Write program illustrating run-polymorphism using virtual methods.
+
+***** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+// CPP program to illustrate
+// working of Virtual Functions
+#include<iostream>
+using namespace std;
+
+class base
+{
+public:
+    void fun_1() { cout << "base-1\n"; }
+    virtual void fun_2() { cout << "base-2\n"; }
+    virtual void fun_3() { cout << "base-3\n"; }
+    virtual void fun_4() { cout << "base-4\n"; }
+};
+
+class derived : public base
+{
+public:
+    void fun_1() { cout << "derived-1\n"; }
+    void fun_2() { cout << "derived-2\n"; }
+    void fun_4(int x) { cout << "derived-4\n"; }
+};
+
+int main()
+{
+    base *p;
+    derived obj1;
+    p = &obj1;
+
+    // Early binding because fun1() is non-virtual
+    // in base
+    p->fun_1();
+
+    // Late binding (RTP)
+    p->fun_2();
+
+    // Late binding (RTP)
+    p->fun_3();
+
+    // Late binding (RTP)
+    p->fun_4();
+
+    // Early binding but this function call is
+    // illegal(produces error) becasue pointer
+    // is of base type and function is of
+    // derived class
+    //p->fun_4(5);
+}
+#+END_SRC
+
+#+RESULTS:
+base-1
+derived-2
+base-3
+base-4
+base-1
+derived-2
+base-3
+base-4
+print derived class
+show base class
+
+**** Virtual Functions :drill:
+     :PROPERTIES:
+     :ID:       9c24e8d9-7f99-4a19-850a-c7289a00778b
+     :END:
+
+What are virtual functions in c++?
+
+***** Answer
+
+A virtual function a member function which is declared within base
+class and is re-defined (Overriden) by derived class
+
+**** Virtual Functions :drill:
+     :PROPERTIES:
+     :ID:       4357cad8-2b2e-4b77-a16f-7a77b8d42cce
+     :END:
+
+What are virutal functions mainly used for?
+
+***** Answer
+
+They are mainly used to achieve Runtime polymorphism.
+
+**** Virtual Functions :drill:
+     :PROPERTIES:
+     :ID:       4b8ebf24-b5c4-44ea-91f3-449c2f2d013b
+     :END:
+
+When is a virtual function call resolved?
+
+***** Answer
+
+Run-time.
+
+*** Derived Classes
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+  struct Base {
+      int a, b, c;
+  };
+  // every object of type Derived includes Base as a subobject
+  struct Derived : Base {
+      int b;
+  };
+  // every object of type Derived2 includes Derived and Base as subobjects
+  struct Derived2 : Derived {
+      int c;
+  };
+
+  int main()
+  {
+    Derived2 x;
+    x.a = 10;
+    x.b = 12;
+    x.c = 15;
+  }
+#+END_SRC
+
+#+RESULTS:
+
+*** Virtual base classes
+**** Intro
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+#include <iostream>
+
+struct B { int n; };
+class X : public virtual B {};
+class Y : public virtual B {};
+class Z : public B {};
+// every object of type AA has one X, one Y, one Z, and two B's:
+// one that is the base of Z and one that is shared by X and Y
+struct AA : X, Y, Z {
+    AA() {
+        X::n = 1; // modifies the virtual B subobject's member
+        Y::n = 2; // modifies the same virtual B subobject's member
+        Z::n = 3; // modifies the non-virtual B subobject's member
+
+        std::cout << X::n << Y::n << Z::n << '\n'; // prints 223
+    }
+};
+
+int main()
+{
+  AA aa;
+}
+#+END_SRC
+
+#+RESULTS:
+223
+
+**** Virtual Base Classes :drill:
+     :PROPERTIES:
+     :ID:       09574739-e169-4d71-a08f-bba1b778b3ec
+     :END:
+
+What is a virtual base class?
+
+***** Answer
+
+Suppose you have two derived classes B and C that have a common base class A,
+and you also have another class D that inherits from B and C. You can declare
+the base class A as virtual to ensure that B and C share the same subobject of
+A.
+
+**** Virtual Base Classes :drill:
+     :PROPERTIES:
+     :ID:       e2443a46-f547-4fdc-8836-faf8e8750c69
+     :END:
+
+Describe what happens where indicated in the code below:
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+#include <iostream>
+
+struct B {
+    int n;
+    B(int x) : n(x) {}
+};
+
+struct X : virtual B { X() : B(1) {} };
+struct Y : virtual B { Y() : B(2) {} };
+struct AA : X, Y     { AA() : B(3), X(), Y() {} };
+
+int main() {
+  AA a; // (1)
+  std::cout << a.n;
+  X x; // (2)
+  std::cout << x.n;
+
+  Y y;
+  std::cout << y.n;
+}
+#+END_SRC
+
+#+RESULTS:
+
+***** Answer
+
+1. the default constructor of AA calls the default constructors of X and Y
+   but those constructors do not call the constructor of B because B is a virtual base
+
+2. the default constructor of X calls the constructor of B
+
+*** Inheritence
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+#include <iostream>
+
+class Base
+{
+    public:
+      int a;
+    protected:
+      int b;
+    private:
+      int c;
+};
+
+class Derived:private Base   //Not mentioning private is OK because for classes it  defaults to private
+{
+    public:
+      int d{10};
+      void doSomething()
+      {
+          a = 10;  // Allowed
+          b = 20;  // Allowed
+          // c = 30;  // Not Allowed, Compiler Error
+      }
+};
+
+class Derived2:public Derived
+{
+    void doSomethingMore()
+    {
+        // a = 10;  //Not Allowed, Compiler Error, a is private member of Derived now
+        // b = 20;  //Not Allowed, Compiler Error, b is private member of Derived now
+        // c = 30;  //Not Allowed, Compiler Error
+    }
+};
+
+int main()
+{
+    Derived obj;
+    obj.d = 11;
+    std::cout << obj.d << std::endl;
+    // obj.a = 10;  //Not Allowed, Compiler Error
+    // obj.b = 20;  //Not Allowed, Compiler Error
+    // obj.c = 30;  //Not Allowed, Compiler Error
+
+}
+#+END_SRC
+
+#+RESULTS:
+11
+11
+10
+
+**** Base Specifiers
+
+What is the syntax for base specifiers
+
+***** Answer
+
+attr(optional) access-specifier(optional) virtual-specifier(optional) class-or-decltype
+
+**** Access Specifiers
+
+What is the default access specifier?
+
+***** Answer
+
+If access-specifier is omitted, it defaults to public for classes declared
+with class-key struct and to private for classes declared with class-key class.
+
+**** Access Specifiers
+
+What are the three access specifiers?
+
+***** Answer
+
+public, private, protected
+
+****
+** Arrays
+*** Array Constrution :drill:
+    :PROPERTIES:
+    :ID:       67d800ba-d6d5-4196-be06-4cb563a001ba
+    :END:
+
+Write a program that sums up up elements in a single-dimentional array.
+
+**** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+  // arrays example
+  #include <iostream>
+  using namespace std;
+
+  int main ()
+  {
+    int foo [] = {16, 2, 77, 40, 12071};
+    int n, result=0;
+    for ( n=0 ; n<5 ; ++n )
+      {
+        result += foo[n];
+      }
+    cout << result << endl;
+  }
+
+#+END_SRC
+
+*** Array Construction :drill:
+    :PROPERTIES:
+    :ID:       e62e88c6-90a3-4885-933e-008189d25426
+    :END:
+
+Write a program that sums up elements in a multi-dimentional array.
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11 :results raw
+  #include <iostream>
+  using namespace std;
+
+  int main () {
+    int jimy[2][2] = {{1, 2}, {3, 4}};
+    int sum = 0;
+    for (int i = 0; i < 2; i++) {
+      for (int j = 0; j < 2; j++) {
+        sum += jimy[i][j];
+      }
+    }
+    cout << "sum: " << sum << endl;
+    // Note
+    cout << "this is not out of bounds: " << jimy[5][0] << endl;
+  }
+#+END_SRC
+
+#+RESULTS:
+sum: 10
+this is not out of bounds: 0
+
+** Vectors
+** Inlining
+*** Inlining :drill:
+    :PROPERTIES:
+    :ID:       47ccfce2-5f21-4f88-986e-c30e934e6586
+    :END:
+
+Write an inlined function that concatinates two strings.
+
+**** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <stdlib.h>
+#include <iostream>
+
+using namespace std;
+/*
+ not that passing by reference is often more efficient because
+ otherwise a copy of the argument is created every call.
+ */
+inline string cat (const string& a, const string& b) {
+  return a+b;
+}
+
+int main () {
+  cout << cat("hello", " world");
+}
+#+END_SRC
+
+#+RESULTS:
+: hello world
+
+** Library Arrays
+*** Library Arrays :drill:
+    :PROPERTIES:
+    :ID:       e7c2a131-cce6-424e-9ee8-438a7f199a18
+    :END:
+
+Write a program that initializes a library array with
+three elements and sums them up.
+
+**** Answer
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+#include <array>
+using namespace std;
+
+int main()
+{
+  array<int,3> myarray {10,20,30};
+
+  for (int i=0; i<myarray.size(); ++i)
+    ++myarray[i];
+
+  for (int elem : myarray)
+    cout << elem << '\n';
+
+  // This doesn't fail
+  cout << myarray[4] << endl;
+}
+#+END_SRC
+
+#+RESULTS:
+|      11 |
+|      21 |
+|      31 |
+| 4197168 |
+
+** Namespace Aliasing
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+
+namespace alias = std;
+
+int main () {
+  alias::cout << "Hello World" << alias::endl;
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+: Hello World
+
+** Namespaces
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+using namespace std;
+
+namespace foo
+{
+  int value() { return 5; }
+}
+
+namespace bar
+{
+  const double pi = 3.1416;
+  double value() { return 2*pi; }
+}
+
+int main () {
+  cout << foo::value() << '\n';
+  cout << bar::value() << '\n';
+  cout << bar::pi << '\n';
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+|      5 |
+| 6.2832 |
+| 3.1416 |
+
+** Overloads
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+  // overloading functions
+  #include <iostream>
+  using namespace std;
+
+  int operate (int a, int b)
+  {
+    return (a*b);
+  }
+
+  // Overload type
+  double operate (double a, double b)
+  {
+    return (a/b);
+  }
+
+  // Arity overload
+  double operate (int a, int b, int c) {
+    return operate(operate(a, b), c);
+  }
+
+  int main ()
+  {
+    int x=5,y=2;
+    double n=6.0,m=2.0;
+    cout << operate(x,y) << '\n';
+    cout << operate(n,m) << '\n';
+    cout << operate(x,y,y) << '\n';
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+| 10 |
+|  3 |
+| 20 |
+
+** Pointer Arithmatic
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+// more pointers
+#include <iostream>
+using namespace std;
+
+/*
+  memory can be thought of as an array of bytes where each
+  address is an index in the array and holds 1 byte
+ */
+
+int main ()
+{
+  // pointers have their own arithmetic.
+  int numbers[5];
+  int * p;
+  int * p2;
+  p = numbers;
+  *p = 10;
+  cout << p << endl;
+  p2 = p;
+  p++;  *p = 20;
+  cout << p - p2 << endl;
+  // cast to long because 64-bit memory architecture.
+  cout << (long) p - (long) p2 << endl;
+  cout << p << endl;
+  p = &numbers[2];  *p = 30;
+  cout << p << endl;
+  p = numbers + 3;  *p = 40;
+  cout << p << endl;
+  p = numbers;  *(p+4) = 50;
+  cout << p << endl;
+  return 0;
+}
+
+#+END_SRC
+
+#+RESULTS:
+| 0x7fffa05a8c90 |
+|              1 |
+|              4 |
+| 0x7fffa05a8c94 |
+| 0x7fffa05a8c98 |
+| 0x7fffa05a8c9c |
+| 0x7fffa05a8c90 |
+
+** Pointers and Arrays
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+// more pointers
+#include <iostream>
+using namespace std;
+
+int main ()
+{
+  int numbers[5];
+  int * p;
+  p = numbers;
+  *p = 10;
+  p++;  *p = 20;
+  p = &numbers[2];  *p = 30;
+  p = numbers + 3;  *p = 40;
+  p = numbers;  *(p+4) = 50;
+  for (int n=0; n<5; n++)
+    cout << numbers[n] << ", ";
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+| 10 | 20 | 30 | 40 | 50 |
+
+** Pointers
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+using namespace std;
+
+int main () {
+  // & is the Address-of opertor
+  // * is the dereference (Value-of) operator
+  int myvar = 25;
+  int* foo = &myvar;
+  cout <<  "Address of foo: " << foo << endl; // Address
+  cout << "Value of foo: " << *foo << endl;
+
+  *foo=40;
+  cout <<  "Address of foo: " << foo << endl; // Address
+  cout << "Value of foo: " << *foo << endl;
+}
+#+END_SRC
+
+#+RESULTS:
+| Address | of | foo: | 0x7ffcd5a4a2cc |
+| Value   | of | foo: |             25 |
+| Address | of | foo: | 0x7ffcd5a4a2cc |
+| Value   | of | foo: |             40 |
+
+** Pybind
+*** Prereqs
+
+- python-dev, python-3-dev, cmake
+
+*** Add 2d Arrays
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+/*
+
+  Signature of buffer_info:
+
+struct buffer_info {
+  void *ptr;
+  ssize_t itemsize;
+  std::string format;
+  ssize_t ndim;
+  std::vector<ssize_t> shape;
+  std::vector<ssize_t> strides;
+};
+
+*/
+
+py::array_t<double> add_arrays(py::array_t<double> input1, py::array_t<double> input2) {
+  py::buffer_info buf1 = input1.request(), buf2 = input2.request();
+
+  if (buf1.ndim != buf2.ndim)
+    throw std::runtime_error("Dimensions must be compatible");
+
+  if (buf1.size != buf2.size)
+    throw std::runtime_error("Input shapes must match");
+
+  /* No pointer is passed, so NumPy will allocate the buffer */
+  // auto result = py::array_t<double>(buf1.size);
+
+  auto buf3 = py::buffer_info(new double[input1.size()],            /* Pointer to buffer */
+                              buf1.itemsize,  /* Size of one scalar */
+                              buf1.format,    /* Python struct-style format descriptor */
+                              buf1.ndim,      /* Number of dimensions */
+                              buf1.shape,     /* Buffer dimensions */
+                              buf1.strides    /* Strides (in bytes) for each index */
+                              );
+
+
+  double *ptr1 = (double *) buf1.ptr,
+    *ptr2 = (double *) buf2.ptr,
+    *ptr3 = (double *) buf3.ptr;
+
+  for (size_t idx = 0; idx < (size_t) buf1.size; idx++) {
+    ptr3[idx] = ptr1[idx] + ptr2[idx];
+  }
+
+  auto result = py::array_t<double>(buf3);
+
+  return result;
+}
+
+PYBIND11_MODULE(example, m) {
+  m.def("add_arrays", &add_arrays, "Add two NumPy arrays");
+}
+#+END_SRC
+
+#+RESULTS:
+
+*** Add Arrays
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+namespace py = pybind11;
+
+py::array_t<double> add_arrays(py::array_t<double> input1, py::array_t<double> input2) {
+  py::buffer_info buf1 = input1.request(), buf2 = input2.request();
+
+  if (buf1.ndim != 1 || buf2.ndim != 1)
+    throw std::runtime_error("Number of dimensions must be one");
+
+  if (buf1.size != buf2.size)
+    throw std::runtime_error("Input shapes must match");
+
+  /* No pointer is passed, so NumPy will allocate the buffer */
+  auto result = py::array_t<double>(buf1.size);
+
+  py::buffer_info buf3 = result.request();
+
+  double *ptr1 = (double *) buf1.ptr,
+    *ptr2 = (double *) buf2.ptr,
+    *ptr3 = (double *) buf3.ptr;
+
+  for (size_t idx = 0; idx < buf1.shape[0]; idx++)
+    ptr3[idx] = ptr1[idx] + ptr2[idx];
+
+  return result;
+}
+
+PYBIND11_MODULE(example, m) {
+  m.def("add_arrays", &add_arrays, "Add two NumPy arrays");
+}
+#+END_SRC
+
+*** Default Args
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+
+int add(int i, int j = 3) {
+  return i + j;
+}
+
+
+PYBIND11_MODULE(example, m) {
+  m.doc() = "pybind11 example plugin"; // optional module docstring
+
+  m.def("add", &add, "A function which adds two numbers",
+        py::arg("i"), py::arg("j"));
+}
+#+END_SRC
+
+#+RESULTS:
+
+*** Exporting Variables
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+
+PYBIND11_MODULE(example, m) {
+  // Note: unicode strings are sent
+  m.attr("the_answer") = 42; // exposes attribute the_answer in python module
+  py::object world = py::cast("World");
+  m.attr("what") = world;
+
+  m.attr("Test") = "Test";
+}
+#+END_SRC
+
+#+RESULTS:
+
+*** Filter Depth
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+py::array_t<uint16_t>
+filter_depth(py::array_t<float> depth,
+             py::array_t<float> z_end,
+             py::array_t<float> xy_distance,
+             float threshold,
+             int min_neighbors,
+             float bottom_thickness,
+             float bottom_clean_xy_distance,
+             int full_weight) {
+
+  py::buffer_info z_end_info = z_end.request();
+  py::buffer_info depth_info = depth.request();
+  uint8_t n_good_array[depth.size()] = {0};
+
+  uint8_t *p_n_good_array = NULL;
+  uint8_t *p_n_good_array_neighbor = NULL;
+
+  float *p_depth_neighbor = NULL;
+
+  float* p_zend = (float *) z_end_info.ptr;
+  float* p_depth = (float *) depth_info.ptr;
+
+  for (int i = 0; i < depth_info.shape[0]*depth_info.shape[1]; ++i, ++p_zend, ++p_depth) {
+      if (*p_zend <= 0 || *p_depth <= 0) {
+          *p_depth = NAN;
+      }
+  }
+
+  long di[4] = {0, depth_info.shape[1], -depth_info.shape[1], depth_info.shape[1]};
+  long dj[4] = {1, 0, 1, 1};
+  long istart[4] = {0, 0, 1, 0};
+
+  long Ni[4] = {depth_info.shape[0], depth_info.shape[0]-1, depth_info.shape[0], depth_info.shape[0]-1};
+  long Nj[4] = {depth_info.shape[1]-1, depth_info.shape[1], depth_info.shape[1]-1, depth_info.shape[1]-1};
+
+  // neighbor_down & neighbor_up
+  // neighbor_right and left
+  // neighbor_up, neighbor_right and neighbor_left, neighbor_down
+  // neighbor_right, neighbor_down and neighbor_left, neighbor_up
+
+  int direction;
+
+  for (direction=0; direction < 4; ++direction) {
+    for (int i = istart[direction]; i < Ni[direction]; ++i) {
+      p_depth = (float* ) depth_info.ptr + i*depth_info.shape[1];
+      p_n_good_array = &n_good_array[0] + i*depth_info.shape[1];
+      p_depth_neighbor = p_depth + di[direction] + dj[direction];
+      p_n_good_array_neighbor = p_n_good_array + di[direction] + dj[direction];
+
+      int j_limit = Nj[direction];
+      for (int j = 0; j < j_limit; ++j) {
+          if (std::abs(*p_depth_neighbor - *p_depth) <= threshold) {
+              *p_n_good_array += 1;
+              *p_n_good_array_neighbor += 1;
+          }
+          ++p_n_good_array;
+          ++p_n_good_array_neighbor;
+          ++p_depth;
+          ++p_depth_neighbor;
+      }
+    }
+  }
+
+  p_zend = (float *) z_end_info.ptr;
+
+  py::buffer_info xy_distance_info = xy_distance.request();
+  float *p_xy_distance = (float *) xy_distance_info.ptr;
+  int16_t marking_weights_data[depth.size()] = {0};
+  int16_t *p_marking_weights = &marking_weights_data[0];
+  p_n_good_array = &n_good_array[0];
+  for (int i = 0; i < depth_info.shape[0]*depth_info.shape[1]; ++i, ++p_zend, ++p_xy_distance, ++p_marking_weights, ++p_n_good_array) {
+      // mark is far and close to the ground; ignore it, too much risk of noise from the ground
+      if ((*p_zend >= bottom_thickness || *p_xy_distance <= bottom_clean_xy_distance) &&
+          (*p_n_good_array >= min_neighbors))
+      {
+          *p_marking_weights = full_weight;
+      } else {
+          *p_marking_weights = 0;
+      }
+  }
+
+  auto buff = py::buffer_info(&marking_weights_data[0],               /* Pointer to buffer */
+                              sizeof(int16_t),                        /* Size of one scalar */
+                              py::format_descriptor<int16_t>::value,  /* Buffer format */
+                              2,                                      /* Number of dimensions */
+                              depth_info.shape,                       /* Buffer dimensions */
+                              {sizeof(int16_t), sizeof(int16_t)}      /* Strides (in bytes) for each index */
+                              );
+
+  auto marking_weights = py::array_t<int16_t>(buff);
+  return marking_weights;
+}
+
+PYBIND11_MODULE(example, m) {
+  m.def("filter_depth", &filter_depth, "\
+Returns a int16  array of marking_weights. A pixel will be marked full weight except if: \
+    - it is surrounded (in its 8-neighborhood) by less than min_neighbors others\
+      with similar depth (difference smaller than threshold).\
+      However, neighbors which are below the bottom of the voxel volume do not count\
+      (to avoid creating marks from imprecise ground reflections).\
+    - if it closer than bottom_thickness to the min_obstacle_height of the depth source\
+       (as determined by z_end). Such points are ignored if they are further away\
+       (in xy distance) than bottom_clean_xy_distance.\
+:param depth: a 2d array of depths from the camera\
+:param z_end: a 2d array of floats, same size as depth, with the z coordinate\
+    of the end of each ray relative to the min_obstacle_height of the depth source\
+    (so negative values indicate rays that end below the min_obstacle_height for the source) \
+:param xy_distance: a 2d array of floats, same size as depth, with the distance in the\
+    xy plane of each ray\
+:param threshold: difference in depth beyond which neighboring points don't count\
+    towards marking them full weight\
+:param min_neighbors: how many of the 8 neighbors of a pixel have to be closer (in depth)\
+    than threshold to mark the pixel full weight. Neighbors that fall below the voxel\
+    volume (z_end < 0) don't count.\
+:param bottom_thickness, bottom_clean_xy_distance: rays with z_end lower than bottom_thickness\
+    and xy_distance longer than bottom_clean_xy_ditance will not be marked.\
+:param full_weight: maximum weight of a mark in the voxel volume",
+        py::arg("depth"),
+        py::arg("z_end"),
+        py::arg("xy_distance"),
+        py::arg("threshold"),
+        py::arg("min_neighbors"),
+        py::arg("bottom_thickness"),
+        py::arg("bottom_clean_xy_distance"),
+        py::arg("full_weight"));
+}
+#+END_SRC
+
+*** Find Ghosts
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+void
+find_ghosts(depth, last_depth,
+            float d_yaw, py::array_t<uint16_t> dr_last,
+            max_y, x_angles, z_angles,
+            x_angle_spacing, z_angle_spacing, components_module) {
+    '''
+    Returns two images, same size as depth:
+        - A bool mask that is true for ghost pixels
+        - A modified depth image to be used for comparison with the next frame
+    :param depth: a 2d array of depths from the camera
+    :param last_depth: a 2d array of depths from the previous frame of the camera
+    :param d_yaw: difference in yaw between depth and last_depth (can be positive or negative)
+    :param dr_last: (dx, dy) displacement of the robot in the frame of reference of last_depth
+    :param max_y: ghosts are only filtered for y pixel coordinate less than max_y
+        (meaning closer to the horizon)
+    :param x_angles, z_angles: horizontal and vertical angles of each
+        point in the depth image
+    :param x_angle_spacing, z_angle_spacing: difference between neighboring pixels in horizontal and vertical
+        angles (which is not uniform in the whole image); used to find the pixel-by-pixel correspondence
+        between the current and the last depth image
+    :param components_module: a ConnectedComponentsWrapper to run discard_connected_ghosts
+    '''
+  // max_ghost_depth = 1.5  # nothing farther away than this will be considered ghost
+  // min_depth_decrease = 1.0  # a ghost's depth must be at least this much closer than the depth in the previous frame
+  // max_y = min(max_y, depth.shape[0])
+  // potential_ghosts = np.zeros(depth.shape, dtype=np.uint8)
+  // all_last_x = np.empty(depth.shape, dtype=np.int)
+  // all_last_x.fill(-1)
+  // all_last_y = np.empty(depth.shape, dtype=np.int)
+  // all_last_y.fill(-1)
+
+  // # First we compare the current depth image with the previous depth image
+  // # to mark points that are potential ghosts (i.e., which are close to the robot
+  // # and do not correspond with similarly close objects in the previous frame)
+
+  // SUSPECTED_GHOST = 1
+  // OUT_OF_LAST_IMAGE = 2
+  // SOLID = 3
+  for (int x = 0; x < Ndepth[1]; ++x) {
+    for (int y = 0; y < Ndepth[0]; ++y) {
+      float d = depth(y, x);
+      if (d < max_ghost_depth + 0.5) potential_ghosts(y, x) = SOLID;
+      if (d > max_ghost_depth) continue;
+      // main logic: find the point in the last image corresponding to (x, y) in the current image
+      float a = -x_angles(y, x) + d_yaw;
+      float b = z_angles(y, x);
+      float horizontal_depth = d * cos(b);
+      float vertical_depth = d * cos(a);
+      float last_dx = dr_last(1) + horizontal_depth * sin(a);
+      float last_dz = vertical_depth * sin(b);
+      float last_ddepth = dr_last(0) + horizontal_depth * cos(a);
+      float expected_last_depth = hypot(hypot(last_dx, last_dz), last_ddepth);
+      float horizontal_angle = -atan2(last_dx, last_ddepth);
+      float vertical_angle = atan2(last_dz, last_ddepth);
+      float da_h = horizontal_angle - x_angles(y, x);
+      float da_v = vertical_angle - z_angles(y, x);
+      int dx = (int)round(da_h / x_angle_spacing(y, x));
+      int dy = (int)round(da_v / z_angle_spacing(y, x));
+      int last_x = x + dx;
+      int last_y = y + dy;
+
+      if (last_x < 0 || last_x >= Ndepth[1] || last_y < 0 || last_y >= Ndepth[0]) {
+          potential_ghosts(y, x) = OUT_OF_LAST_IMAGE;
+          continue;
+      }
+      int min_last_y = std::max(0, last_y - 1);
+      int max_last_y = std::min(Ndepth[0] - 1, last_y + 1);
+      int min_last_x = std::max(0, last_x - 1);
+      int max_last_x = std::min(Ndepth[1] - 1, last_x + 1);
+      bool close_depth = false;
+      for (int neighbor_x = min_last_x; neighbor_x <= max_last_x; ++neighbor_x) {
+          for (int neighbor_y = min_last_y; neighbor_y <= max_last_y; ++neighbor_y) {
+              if (expected_last_depth - last_depth(neighbor_y, neighbor_x) > -min_depth_decrease) {
+                  close_depth = true;
+                  break;
+              }
+          }
+          if (close_depth) break;
+      }
+      if (!close_depth) {  // all neighbors indicate this is a ghost
+          potential_ghosts(y, x) = SUSPECTED_GHOST;
+          all_last_x(y, x) = last_x;
+          all_last_y(y, x) = last_y;
+      }
+    }
+  }
+}
+#+END_SRC
+
+*** Single Pixel Filter
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/traits.hpp>
+
+namespace py = pybind11;
+
+py::array_t<uint16_t>
+filter_single_pixels_from_costmap(py::array_t<uint16_t> costmap_data,
+                                  uint8_t lethal_obstacle,
+                                  float resolution,
+                                  float radius = 0.6) {
+  // Remove all single pixel LETHAL_OBSTACLEs that have R neighbors of FREE_SPACE in every direction with R being an
+  // pre-defined radius that can either be calculated off of the footprint or given as part of a spec.
+  //   :param costmap: The costmap to filter
+  //   :param radius: Radius in meters which is then converted to pixels. This radius is used to
+  //                  create a square kernel for finding a single pixel with free space all around it
+  //   :param footprint: The robot's footprint to convert to a kernel and run over the costmap for single pixel filtering.
+  // costmap_data = costmap.get_data()
+  // obstacle_image = np.zeros_like(costmap_data)
+  // obstacle_image[costmap_data == CostMap2D.LETHAL_OBSTACLE] = 1
+
+  // assert (obstacle_image.flags['C_CONTIGUOUS'])
+  // assert (obstacle_image.dtype == np.uint8)
+
+  int pixel_radius = int(radius / resolution);
+
+  // Need to run through the integral image, this should be C-contiguous as well
+  // cvIntegral()
+
+  // Faster method to calculate a single pixel with no surrounding data. Profile information stored here:
+  //  https://braincorporation.atlassian.net/browse/SBT-2197
+  //
+  // NOTE: The integral image is actually padded along the top and left and is therefore one row and column larger
+  // than the original image
+
+  py::buffer_info costmap_info = costmap_data.request();
+  size_t height = costmap_info.shape[0];
+  size_t width = costmap_info.shape[1];
+
+  // Create our integral image
+  cv::Mat obstacle_integral(height, width, CV_32S, 0);
+  cv::Mat integral_src(height, width, CV_32S, costmap_info.ptr);
+  cv::integral(integral_src, obstacle_integral);
+
+  uint8_t obstacle_image[height][width] = {0};
+  uint8_t *obstacle_image_ptr = &obstacle_image[0][0];
+  uint16_t *costmap_data_ptr = (uint16_t *) costmap_info.ptr;
+  for (size_t i = 0; i < height*width; i++, obstacle_image_ptr++, costmap_data_ptr++) {
+    if (*costmap_data_ptr == lethal_obstacle) {
+      *obstacle_image_ptr = 1;
+    }
+  }
+  // This is where we'll mark the pixels that need to be filtered
+  bool filter_image[height][width] = {0};
+
+  // We only need to scan the inside portion of an image surrounded by a margin
+  // that is pixel_radius
+  // wide. The algorithm is guaranteed not to filter out pixels in these margins
+  // since by definition
+  // they are not surrounded purely by empty space.
+  int scan_x_start = pixel_radius;
+  int scan_x_end = height - pixel_radius;
+  int scan_y_start = pixel_radius;
+  int scan_y_end = width - pixel_radius;
+  unsigned char *p_obstacle_image = &obstacle_image[0][0];
+
+  bool *p_filter_image = &filter_image[0][0];
+
+  for (int j = scan_y_start; j < scan_y_end; j++) {
+    // We can squeeze more performance out of this if we can compute these incrementally
+    p_obstacle_image = &obstacle_image[j][scan_x_start];
+    p_filter_image = &filter_image[j][scan_x_start];
+
+    for (int i = scan_x_start; i < scan_x_end; i++) {
+      // Look for marked pixels (free spaces can be ignored) and for each marked
+      // pixel check its
+      // surroundings up to pixel_radius on either side to see if there are any
+      // that are marked
+      if (*p_obstacle_image) {
+        int left_i = (i - pixel_radius) - 1;
+        int right_i = (i + pixel_radius);
+        int bottom_j = (j + pixel_radius);
+        int top_j = (j - pixel_radius) - 1;
+
+        // Everything is shifted in obstacle_integral by 1
+        left_i++;
+        right_i++;
+        top_j++;
+        bottom_j++;
+
+        // Total value in the integral image for a box with center at i, j and
+        // square radius pixel_radius
+        int total_value = obstacle_integral.at<int>(bottom_j, right_i);
+        total_value -= obstacle_integral.at<int>(bottom_j, left_i);
+        total_value -= obstacle_integral.at<int>(top_j, right_i);
+        total_value += obstacle_integral.at<int>(top_j, left_i);
+
+        // Mark this as eligible for filtering
+        //
+        if (total_value <= 1) {
+          *p_filter_image = true;
+        }
+      }
+
+      ++p_obstacle_image;
+      ++p_filter_image;
+    }
+  }
+  auto buff = py::buffer_info(&filter_image[0][0],
+                              sizeof(bool),
+                              py::format_descriptor<bool>::value,
+                              2,
+                              costmap_info.shape,
+                              {sizeof(bool), sizeof(bool)}
+                              );
+
+  auto filter_img = py::array_t<bool>(buff);
+  return filter_img;
+}
+#+END_SRC
+
+*** Keyword args
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+
+int add(int i, int j) {
+  return i + j;
+}
+
+
+PYBIND11_MODULE(example, m) {
+  m.doc() = "pybind11 example plugin"; // optional module docstring
+
+  m.def("add", &add, "A function which adds two numbers",
+        py::arg("i"), py::arg("j"));
+}
+#+END_SRC
+
+*** Numpy
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+class Matrix {
+public:
+  Matrix(size_t rows, size_t cols) : m_rows(rows), m_cols(cols) {
+    m_data = new float[rows*cols];
+  }
+  float *data() { return m_data; }
+  size_t rows() const { return m_rows; }
+  size_t cols() const { return m_cols; }
+private:
+  size_t m_rows, m_cols;
+  float *m_data;
+};
+
+
+PYBIND11_MODULE(example, m) {
+  m.doc() = "pybind11 example plugin"; // optional module docstring
+
+  py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
+  .def_buffer([](Matrix &m) -> py::buffer_info {
+      return py::buffer_info(
+                             m.data(),                               /* Pointer to buffer */
+                             sizeof(float),                          /* Size of one scalar */
+                             py::format_descriptor<float>::format(), /* Python struct-style format descriptor */
+                             2,                                      /* Number of dimensions */
+                             { m.rows(), m.cols() },                 /* Buffer dimensions */
+                             { sizeof(float) * m.cols(),             /* Strides (in bytes) for each index */
+                                 sizeof(float) }
+                             );
+    });
+
+}
+#+END_SRC
+
+*** Objects
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include<pybind11/pybind11.h>
+#include <iostream>
+
+namespace py = pybind11;
+
+
+struct Pet {
+  Pet(const std::string &name) : name(name) { }
+  void setName(const std::string &name_) { name = name_; }
+  const std::string &getName() const { return name; }
+
+  std::string name;
+  int age;
+};
+
+
+PYBIND11_MODULE(example, m) {
+  py::class_<Pet>(m, "Pet", py::dynamic_attr())
+    .def(py::init<const std::string &>())
+    .def("setName", &Pet::setName)
+    .def("getName", &Pet::getName)
+    .def("__repr__",
+         [](const Pet &a) {
+           return "<example.Pet named '" + a.name + "'>";
+         }
+         )
+    .def_readwrite("age", &Pet::age)
+    .def_readonly("name", &Pet::name);
+}
+#+END_SRC
+
+** Scope
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++17
+// inner block scopes
+#include <iostream>
+using namespace std;
+
+int main () {
+  int x = 10;
+  int y = 20;
+  {
+    int x;   // ok, inner scope.
+    x = 50;  // sets value to inner x
+    y = 50;  // sets value to (outer) y
+    cout << "inner block:\n";
+    cout << "x: " << x << '\n';
+    cout << "y: " << y << '\n';
+  }
+  cout << "outer block:\n";
+  cout << "x: " << x << '\n';
+  cout << "y: " << y << '\n';
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+| inner | block: |
+| x:    |     50 |
+| y:    |     50 |
+| outer | block: |
+| x:    |     10 |
+| y:    |     50 |
+
+** Stringstream
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+#include <sstream>
+using namespace std;
+
+int main() {
+  stringstream ss1;
+  ss1 << "SS1";
+  cout << ss1.str() << endl;
+  cout << (ss1.str() == ss1.str()) << endl;
+
+  stringstream ss2;
+  ss2 << "SS2";
+  // Completely bizarre swap operation
+  ss1.swap(ss2);
+  cout << "ss1: " << ss1.str() << endl;
+  cout << "ss2: " << ss2.str() << endl;
+
+  // Read out of it.
+  char* buff = new char [3];
+  int length = 2;
+  ss1.read(buff, length);
+  cout << buff << endl;
+}
+#+END_SRC
+
+#+RESULTS:
+| SS1  |     |
+| 1    |     |
+| ss1: | SS2 |
+| ss2: | SS1 |
+| SS   |     |
+
+** Structs
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+  // example about structures
+  #include <iostream>
+  #include <string>
+  #include <sstream>
+  using namespace std;
+
+  struct Product {
+    static void f();
+    int weight;
+    double price;
+    static string store;
+  };
+
+  // Define static member function.
+  void Product::f()
+  {
+    store = "Walmart";
+  }
+
+  string Product::store = "Walmart";
+
+
+  int main() {
+    Product apple;
+    // Cannot be assigned dynamically:
+    // string Product::store = "Walmart";
+    apple.weight = 20;
+    apple.price = 10.5;
+    cout << apple.weight << endl;
+    cout << apple.price << endl;
+    cout << apple.store << endl;
+  }
+#+END_SRC
+
+#+RESULTS:
+|      20 |
+|    10.5 |
+| Walmart |
+
+** Templates
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+// overloaded functions
+#include <iostream>
+using namespace std;
+
+template<class T>
+T sum (T a, T b)
+{
+  T ret = a + b;
+  return ret;
+}
+
+template<class T, class U>
+T sum(T a, U b) {
+  return (a+b);
+}
+
+int main ()
+{
+  cout << sum<double>(10.5,20) << '\n';
+  cout << sum<int>(10.5,20) << '\n';
+  cout << sum<int, double>(10.5, 30) << '\n';
+  cout << sum<double, int>(10.5, 30);
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+| 30.5 |
+|   30 |
+|   40 |
+| 40.5 |
+
+** Unions
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+#include <iostream>
+using namespace std;
+
+
+// Named
+struct book1_t {
+  char title[50];
+  char author[50];
+  union {
+    float dollars;
+    int yen;
+  } price;
+};
+
+// anonymous
+struct book2_t {
+  char title[50];
+  char author[50];
+  union {
+    float dollars;
+    int yen;
+  };
+};
+
+int main() {
+  book1_t book1;
+  book2_t book2;
+  book1.price.dollars = 10.0;
+  book2.dollars = 10.0; // Ananymous unioins next
+  cout << book1.price.dollars << endl;
+  cout << book2.dollars << endl;
+}
+#+END_SRC
+
+#+RESULTS:
+| 10 |
+| 10 |
+
+** Using
+
+#+BEGIN_SRC cpp :flags -ggdb -std=c++11
+// using
+#include <iostream>
+using namespace std;
+
+namespace first
+{
+  int x = 5;
+  int y = 10;
+}
+
+namespace second
+{
+  double x = 3.1416;
+  double y = 2.7183;
+}
+
+int main () {
+  {
+    using namespace first;
+    cout << x << '\n';
+    cout << y << '\n';
+  }
+  // Not valid because namespace was declared in different scope.
+  // cout << x << '\n';
+  cout << second::x << '\n';
+  cout << second::y << '\n';
+  return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+|      5 |
+|     10 |
+| 3.1416 |
+| 2.7183 |
+
+** Drills
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       bb13dca4-743e-423a-a6c8-f92ecdcb5913
+    :END:
+
+Write a program in C++ to print a welcome text in a separate line.
+
+**** Answer
+
+#+BEGIN_SRC cpp
+#include <iostream>
+using namespace std;
+int main(void){
+     cout << " Write your code at here" ;
+}
+
+#+END_SRC
+
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       132d9022-aca6-413f-b1c8-b63f2a69763a
+    :END:
+
+Write a program in c++ to find Size of fundamental data types
+
+**** Answer
+
+#+BEGIN_SRC cpp :results raw
+#include <iostream>
+using namespace std;
+
+int main()
+{
+   cout << "\n\n Find Size of fundamental data types :\n";
+ 	 cout << "------------------------------------------\n";
+   cout << " The sizeof(char) is :          " << sizeof(char) << " bytes \n" ;
+   cout << " The sizeof(short) is :         " << sizeof(short) << " bytes \n" ;
+   cout << " The sizeof(int) is :           " << sizeof(int) << " bytes \n" ;
+   cout << " The sizeof(long) is :          " << sizeof(long) << " bytes \n" ;
+   cout << " The sizeof(long long) is :     " << sizeof(long long) << " bytes \n";
+   cout << " The sizeof(float) is :         " << sizeof(float) << " bytes \n" ;
+   cout << " The sizeof(double) is :        " << sizeof(double) << " bytes \n";
+   cout << " The sizeof(long double) is :   " << sizeof(long double) << " bytes \n";
+   cout << " The sizeof(bool) is :          " << sizeof(bool) << " bytes \n\n";
+   return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+Find Size of fundamental data types :
+------------------------------------------
+ The sizeof(char) is :          1 bytes
+ The sizeof(short) is :         2 bytes
+ The sizeof(int) is :           4 bytes
+ The sizeof(long) is :          8 bytes
+ The sizeof(long long) is :     8 bytes
+ The sizeof(float) is :         4 bytes
+ The sizeof(double) is :        8 bytes
+ The sizeof(long double) is :   16 bytes
+ The sizeof(bool) is :          1 bytes
+
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       5c2c08c2-da92-4dfb-b077-22fb096792f6
+    :END:
+
+Write a program in C++ to check the upper and lower limits of integer
+
+**** Answer
+
+#+BEGIN_SRC cpp :results raw
+#include <iostream>
+#include <climits>   // integer limits in header file
+using namespace std;
+
+int main()
+{
+    cout << "\n\n Check the upper and lower limits of integer :\n";
+	cout << "--------------------------------------------------\n";
+	cout << " The maximum limit of int data type :                  " << INT_MAX << endl;
+	cout << " The minimum limit of int data type :                  " << INT_MIN << endl;
+	cout << " The maximum limit of unsigned int data type :         " << UINT_MAX << endl;
+	cout << " The maximum limit of long long data type :            " << LLONG_MAX << endl;
+	cout << " The minimum limit of long long data type :             " << LLONG_MIN << endl;
+	cout << " The maximum limit of unsigned long long data type :   " << ULLONG_MAX << endl;
+	cout << " The Bits contain in char data type :                  " << CHAR_BIT << endl;
+	cout << " The maximum limit of char data type :                 " << CHAR_MAX << endl;
+	cout << " The minimum limit of char data type :                 " << CHAR_MIN << endl;
+	cout << " The maximum limit of signed char data type :          " << SCHAR_MAX << endl;
+	cout << " The minimum limit of signed char data type :          " << SCHAR_MIN << endl;
+	cout << " The maximum limit of unsigned char data type :        " << UCHAR_MAX << endl;
+	cout << " The minimum limit of short data type :                " << SHRT_MIN << endl;
+    cout << " The maximum limit of short data type :                " << SHRT_MAX << endl;
+    cout << " The maximum limit of unsigned short data type :       " << USHRT_MAX << endl;
+   cout << endl;
+   return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+Check the upper and lower limits of integer :
+--------------------------------------------------
+ The maximum limit of int data type :                  2147483647
+ The minimum limit of int data type :                  -2147483648
+ The maximum limit of unsigned int data type :         4294967295
+ The maximum limit of long long data type :            9223372036854775807
+ The minimum limit of long long data type :             -9223372036854775808
+ The maximum limit of unsigned long long data type :   18446744073709551615
+ The Bits contain in char data type :                  8
+ The maximum limit of char data type :                 127
+ The minimum limit of char data type :                 -128
+ The maximum limit of signed char data type :          127
+ The minimum limit of signed char data type :          -128
+ The maximum limit of unsigned char data type :        255
+ The minimum limit of short data type :                -32768
+ The maximum limit of short data type :                32767
+ The maximum limit of unsigned short data type :       65535
+Find Size of fundamental data types :
+------------------------------------------
+ The sizeof(char) is :          1 bytes
+ The sizeof(short) is :         2 bytes
+ The sizeof(int) is :           4 bytes
+ The sizeof(long) is :          8 bytes
+ The sizeof(long long) is :     8 bytes
+ The sizeof(float) is :         4 bytes
+ The sizeof(double) is :        8 bytes
+ The sizeof(long double) is :   16 bytes
+ The sizeof(bool) is :          1 bytes
+
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       c5103662-7624-4027-8ca2-3e9306582b5e
+    :END:
+
+Write a program in C++ to check overflow/underflow during various
+arithmetical operation.
+
+- What is the result of adding 1 to MAX_INT?
+- What is the result of MAX_INT * MAX_INT?
+- What is the MIN_INT - 1?
+
+**** Answer
+
+#+BEGIN_SRC cpp :results raw
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    cout << "\n\n Check overflow/underflow during various arithmetical operation :\n";
+    cout << " Range of int is [-2147483648, 2147483647]"<< endl;
+	cout << "---------------------------------------------------------------------\n";
+   int n1 = 2147483647;      // maximum range of integer
+   cout <<" Overflow the integer range and set in minimum range : " << n1 + 1 << endl;
+   cout <<" Increasing from its minimum range : " << n1 + 2 << endl;
+   cout <<" Product is: " << n1 * n1 << endl;
+
+   int n2 = -2147483648;     // minimum range of integer
+   cout <<" Underflow the range and set in maximum range : " << n2 - 1 << endl;
+   cout <<" Decreasing from its maximum range : " << n2 - 2 << endl;
+   cout <<" Product is: " << n2 * n2 << endl;
+   cout << endl;
+   return 0;
+}
+#+END_SRC
+
+#+RESULTS:
+Check overflow/underflow during various arithmetical operation :
+ Range of int is [-2147483648, 2147483647]
+---------------------------------------------------------------------
+ Overflow the integer range and set in minimum range : -2147483648
+ Increasing from its minimum range : -2147483647
+ Product is :1
+ Underflow the range and set in maximum range : 2147483647
+ Decreasing from its maximum range : 2147483646
+ Product is : 0
+
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       707e59c7-790a-4df5-9329-1ef90faf2adc
+    :END:
+
+Write a program illustrating the diference between pre-increment
+and post-increment.
+
+What is the difference in associativity?
+
+**** Answer
+
+#+BEGIN_SRC cpp :results raw
+  #include <iostream>
+
+  int main(int* argv)
+  {
+    int a = 10, b, c;
+    c = a++;
+    std::cout << "c = a++; // c = " << c << std::endl;
+    b = ++a;
+    std::cout << "b = ++a: // b = " << b << std::endl;
+  }
+#+END_SRC
+
+#+RESULTS:
+c = a++; // c = 10
+b = ++a: // b = 12
+
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       62ed6dbf-75ef-4310-b6b1-cc36675bcfee
+    :END:
+
+Write a program in C++ to add two numbers accept through keyboard.
+
+**** Answer
+
+#+BEGIN_SRC cpp :shebang #!/bin/bash
+  #include <iostream>
+
+  int main()
+  {
+    int a, b;
+    std::cin >> a;
+    std::cin >> b;
+    std::cout << a + b;
+  }
+#+END_SRC
+
+#+RESULTS:
+: 1235923327
+
+*** W3 Basic :drill:
+    :PROPERTIES:
+    :ID:       da50cbc8-afa9-4e21-8149-fa381b4ab45b
+    :END:
+
+Write a program in C++ to calculate the volume of a cylinder.
+
+**** Answer
+
+#+BEGIN_SRC cpp
+  #include <iostream>
+
+  int main()
+  {
+    int height=10, radius=3;
+    double pi=3.14159265;
+    double volume = (1.0/2.0) * pi * radius * radius * height;
+    std::cout << "volume: " << volume;
+  }
+#+END_SRC
+
+#+RESULTS:
+: volume: 141.372
+
+** C++ Programming Langauge
+
+[1] (∗1) What does (∗2.5) mean for an exercise?
+
+[2] (∗2) Briefly describe the design aims of C++ and
+         comment on the extent to which C++ meets those.
+[3] (∗4) Write an essay: What can a good programming language do for you and what can’t you
+         expect it to help with?
+[4] (∗1) What are the main programming styles supported by C++?
+[5] (∗2.5) List five language features offered by the 1985 version of C++, five
+           features added by C++98,  and  finally  five new  features  added  by
+           C++11.  In  each  case,  order  the  features  in order of importance
+           and for each feature write a sentence describing its role in programming.
+[6] (∗3)  Describe  the  difference  between  dynamic  (run-time)  and  static
+          (compile-time) type checking and outline the strengths and weaknesses of each.
+[7]  (∗1.5) List the major components of the C++ standard library.
+[8]  (∗1.5) List five libraries that you would have liked to be part of the standard.
+[9]  (∗1) List three (or more) advantages from having a library as part of the standard.
+[10] (∗3) List 20 major real-world C++ applications.
+[11] (∗2) From §1.3 pick five suggestions that to you looks
+          most likely to help improve your pro-gramming style.
+[12] (∗2) Make a ‘‘top-ten list’’ of helpful design and
+          programming rules.  Hint: §X.2.
+
+*** A Tour of C++: The Basics
+**** Intro
+
+When first  reading  this  chapter, keep  a  record  of  information
+that  was  new or surprising  to you.  Later, use that list to focus
+your further studies.
+
+**** Ex01 :drill:
+     :PROPERTIES:
+     :ID:       5de9c60f-4bcf-4417-925c-466bc26a0efb
+     :END:
+
+What does a compiler do?  What does a linker do?
+
+***** Answer
+
+End-to-end, a compiler takes text we can read and spits out stuff a
+computer can execute, namely 1s and zeros.
+
+**** Ex03 :drill:
+     :PROPERTIES:
+     :ID:       f3247615-2b96-470c-bae7-ffe4aacf9464
+     :END:
+
+(∗1) List three (or more) C++ compilers.
+
+***** Answer
+
+gcc, clang, Cygwin (GNU C++).
+
+**** Ex04 :drill:
+     :PROPERTIES:
+     :ID:       f7fbcf48-7984-455d-ade0-5e9cc61f3f3c
+     :END:
+
+(∗1) Write out a bool, a char, an int, a double, and a string.
+
+***** Answer
+
+#+BEGIN_SRC cpp :results raw
+  #include <iostream>
+  int main() {
+    std::cout << (bool) false << " " << (char) 10 << " " << (int) 10 << " " << (double) 12.2 << std::endl;
+  }
+#+END_SRC
+
+#+RESULTS:
+0 10 12.2
+
+**** Ex05 :drill:
+     :PROPERTIES:
+     :ID:       6ffaf28c-d51b-47f0-a9be-f7f252e1c30b
+     :END:
+
+(∗1) Read in a bool, a char, an int, a double, and a string.
+
+***** Answer
+
+#+BEGIN_SRC cpp
+  #include <iostream>
+  #include <string.h>
+  using namespace std;
+
+  int main()
+  {
+    bool a; char b; int c; double d; string str;
+
+    cout << "Enter Bool: "; cin >> a;
+    cout << "Enter char: "; cin >> b;
+    cout << "Enter int: "; cin >> c;
+    cout << "Enter double: "; cin >> d;
+    cout << "Enter string: "; cin >> str;
+
+    cout << "bool: " << a << ", char: " << b << ", int: ";
+    cout << c << ", double: " << d << ", string: " << str << endl;
+  }
+#+END_SRC
+
+**** Ex06 :drill:
+     :PROPERTIES:
+     :ID:       4f358b2a-24e8-4250-9aa0-a40b5b54af9e
+     :END:
+
+(∗2) What is an invariant and what good might it do?
+
+***** Answer
+
+An invariannt is a statement about some conditions that holds
+as those conditions vary in some context.
+
+*** A Tour of C++: Abstraction Mechanisms
+
+[1] When first  reading  this  chapter, keep  a  record  of  information
+    that  was  new or surprising to you. Later, use that list to focus your further studies.
+
+[2] (∗2) Give five examples of concrete types that are built-in types in C++.
+    Give five examples of concrete types that are not built-in types in C++.
+
+*** A Tour of C++: Containers and Algorithms
+**** Intro
+
+When first  reading  this  chapter, keep  a  record  of  information  that  was  new or surprising  to
+you.  Later, use that list to focus your further studies.
+
+**** Ex02
+
+(∗1) List five standard-library containers.
+
+***** Answer
+**** Ex03
+
+(∗1) List five standard-library algorithms.
+
+***** Answer
+**** Ex04
+
+(∗1) List five standard-library headers.
+
+***** Answer
+**** Ex05
+
+(∗1.5)  Write  a  program  that  reads  a  name  (a string)  and  an
+        age  (an int)  from  the  standard input stream cin.  Then output
+        a message including the name and age to the standard output stream
+        cout.
+
+***** Answer
+**** Ex06
+
+(∗1.5) Redo §X.5[5], storing several (name,age) pairs in a class.
+       Doing the reading and writ-ing using your own >> and << operators.
+
+***** Answer
+**** Ex07
+
+(∗2) Initialize a vector<int> with the elements 5, 9, −1, 200, and 0.
+     Print it.  Sort is, and print it again.
+
+***** Answer
+**** Ex07
+
+(∗1) Repeat §X.5[7] with a vector<string> initialized with "Kant", "Plato",
+     "Aristotle", "Kierkegard", and "Hume".
+
+***** Answer
+**** Ex07
+
+(∗1) Open a file for writing (as an ofstream) and write a few hundred
+     integers to it.
+
+***** Answer
+**** Ex07
+
+(∗1) Open the file of integers from §X.5[9] for reading (as an ifstream) and
+     read it.
+
+***** Answer
+*** A Tour of C++: Concurrency and Utilities
+
+[1] When first  reading  this  chapter, keep  a  record  of
+    information  that  was  new or surprising to you.  Later, use
+    that list to focus your further studies.
+[2]  (∗1.5)  Write  a  program  with  two treads:  one  that  writes hello
+             every  second  and  one  that writes world! every  second.
+[3]  (∗2) Time a loop.  Write out the time in milliseconds.  Do this for
+          the default setting of your compiler and for a setting using an
+          optimizer (e.g., −O2 or "release").  Be careful not to have
+          the optimizer eliminate your whole loop as dead code because you
+          did not use a result.
+[4]  (∗2)  Repeat  the  histogram  drawing  example  from  §5.6.3  for  a
+           normal_distribution and 30 rows.
+
+[5]  (∗1.5) Use a regex to find all decimal numbers in a file.
+
+*** Types and Declarations
+
+[1] (∗2)  Get  the ‘‘Hello,  world!’’ program (§2.2.1) to run. This is not an
+          exercise in  programming.  It is an exercise to test your use of
+          your edit-compile-link-execute tool chain.
+[2] (∗1) Write a program that prints signed if plain chars are signed on your
+         implementation and unsigned otherwise.
+[3] (∗1.5)  Find  5 different C++ constructs for which the meaning is undefined (§6.1).
+            (∗1.5) Find 5 different C++ constructs for which the meaning is
+            implementation-defined (§6.1).
+[4] (∗1) Find 10 different examples of nonportable C++ code.
+
+[5] (∗1) For each declaration in §6.3, do the following: If the declaration is
+         not a definition, write a definition for it.  If the declaration is a
+         definition, write a declaration for it that is not also a definition.
+[6] (∗1.5) Write a program that prints the sizes of the fundamental types, a few
+           pointer types, and a few enumerations of your choice.  Use the sizeof
+           operator.
+[7] (∗1.5) Write a program that prints out the letters 'a'.. 'z' and the digits '0' .. '9'
+           and their integer values. Do the same for other printable characters.  Do the
+           same again but use hexadecimal notation.
+[8] (∗2)  What, on your system, are the largest and the smallest values of the following
+          types: bool, char, short, int, long, long long, float, double, long double, unsigned and
+          unsigned long.
+
+[9] (∗1) What are the sizes (in number of chars) of the types mentioned in §X.7[8]?
+
+[10] (∗1.5) What are the alignments (in number of chars) of the types mentioned in §X.7[8]?
+
+[11] (∗2) Draw a graph of the integer and fundamental types where a type points to another type if
+          all values of the first can be represented as values of the second on every standards-conform-
+          ing implementation.  Draw the same graph for the types on your favorite implementation.
+
+[12] (∗1) What is the longest local name you can use in a C++ program on your system?  What is
+          the  longest  external  name  you  can  use  in  a  C++  program  on  your  system?   Are  there  any
+restrictions on the characters you can use in a name?
+[13]   (∗1.5) Write a loop that prints out the values 4,5,9,17 , 12 without
+         using an array or a vector .
+
+*** X.8 Pointers, Arrays, and References
+
+[1]     (∗1) Write declarations for the following: a pointer to a character, an array of 10 integers, a
+reference to an array of 10 integers, a pointer to an array of character
+strings, a pointer to a pointer to a character, a constant integer, a pointer to
+a constant integer, and a constant pointer to an integer. Initialize each one.
+
+[2]     ( ∗ 1.5) What, on your system, are the restrictions on the pointer types
+char ∗ , int ∗ , and void ∗ ? For example, may an int ∗ have an odd value? Hint:
+alignment.
+[3] ( ∗
+1)  Use  an  alias  (
+using ) to define the types unsigned char , const unsigned char , pointer to
+integer, pointer to pointer to char , pointer to array of char , array of 7
+pointers to int , pointer to an array of 7 pointers to int , and array of 8
+arrays of 7 pointers to int . Section X.8 Pointers, Arrays, and References 2005
+[4]     (
+∗
+1)  Given  two
+char
+∗
+s  pointing  into  an  array,  find  and  output  the  number  of  characters
+between the two pointed-to characters (zero if they point to the same element).
+[5]     ( ∗
+1)  Given two
+int ∗ s pointing into an array, find and output the number of int s between the
+two pointed-to int s (zero if they point to the same element).
+[6]     ( ∗
+2) What happens when you read and write beyond the bounds of an array.  Do a few exper-
+iments involving a global array of int s , a local array of int s, an array of
+int s allocated by new , and a member array of int s. Try reading and writing
+just beyond the end and far beyond the end. Try the same for just before and far
+before the beginning. See what happens for differ- ent optimizer levels. Then
+try hard never to do out-of-range access by mistake.
+[7]     (
+∗
+1) Write a function that swaps (exchanges the values of) two integers.  Use
+int
+∗
+as the argu-
+ment type.  Write another swap function using
+int&
+as the argument type.
+[8] (∗1.5) What is the size of the array str in the following example:
+char str[] = "a short string";
+What is the length of the string
+"a short string"
+?
+[9]     (
+∗
+1) Define functions
+f(char)
+,
+g(char&)
+, and
+h(const  char&)
+.  Call them with the arguments
+'a'
+,
+49
+,
+3300
+,
+c
+,
+uc
+,  and
+sc
+,  where
+c
+is  a
+char
+,
+uc
+is  an
+unsigned  char
+,  and
+sc
+is  a
+signed  char
+.
+Which calls are legal?  Which calls cause the compiler to introduce a temporary variable?
+[10]   (
+∗
+1)  Define  an  array  of  strings  in  which  the  strings  contain  the  names  of  the  months.  Print
+those strings.  Pass the array to a function that prints those strings.
+[11]   (
+∗
+2)  Read  a  sequence  of  words  from  input.   Use
+Quit
+as  a  word  that  terminates  the  input.
+Print  the  words  in  the  order  they were  entered.  Don’t print  a  word  twice.  Modify  the  pro-
+gram to sort the words before printing them.
+[12]   (
+∗
+2) Write a function that counts the number of occurrences of a pair of letters in a
+string
+and
+another that does the same in a zero-terminated array of
+char
+(a C-style string).  For example,
+the pair
+"ab"
+appears twice in
+"xabaacbaxabb"
+.
+[13]   (
+∗
+2)  Run  some  tests  to  see  if  your  compiler  really  generates  equivalent  code  for  iteration
+using pointers and iteration using indexing (§7.4.1).  If different degrees of optimization can
+be requested, see if and how that affects the quality of the generated code.
+X.9   Structures, Unions, and Enumerations
+[1]     (
+∗
+1) Define a
+struct
+with a member of each of the types
+bool
+,
+char
+,
+int
+,
+long
+,
+double
+, and
+long
+double
+.  Order the members so as to get the largest size of the
+struct
+and the smallest size of
+the
+struct
+.
+[2]     (
+∗
+1.5)  Define  a  table  of  the  names  of  months  of  the  year  and  the  number  of  days  in  each
+month.  Write out that table.  Do this twice; once using an array of
+char
+for the names and an
+array for the number of days and once using an array of structures, with each structure hold-
+ing the name of a month and the number of days in it.
+[3]     (
+∗
+1.5) Find an example where it would make sense to use a name in its own initializer.
+[4]     (
+∗
+1.5)  Define  a
+struct  Date
+to  keep  track  of  dates.   Provide  functions  that  read
+Date
+s  from
+input, write
+Date
+s to output, and initialize a
+Date
+with a date.
+2006      Exercises
+Appendix      X
+[5]     (
+∗
+2) Implement an
+enum
+called
+Season
+with enumerators
+spring
+,
+summer
+,
+autumn
+, and
+winter
+.
+Define operators
+++
+and
+−−
+for
+Season
+.  Define input (
+>>
+) and output (
+<<
+) operations for
+Sea-
+son
+, providing  string  values.   Provide  a  way  to  control  the  mapping  between
+Season
+values
+and their string representations.  For example, I might want the strings to reflect the Danish
+names for the seasons.  For further study, see Chapter 39.
+X.10   Statements
+[1]     (
+∗
+1) Rewrite the following
+for
+-statement as an equivalent
+while
+-statement:
+for (i=0; i!=max_length; i++)
+if (input_line[i] == '?')
+quest_count++;
+Rewrite  it  to  use  a  pointer  as  the  controlled  variable,  that  is,  so  that  the  test  is  of  the  form
+∗
+p=='?'.
+Rewrite it to use a range-
+for
+.
+[2]     (
+∗
+1) See how your compiler reacts to these errors:
+void f(int a, int b)
+{
+if (a = 3) //
+...
+if (a&077 == 0) //
+...
+a := b+1;
+}
+Devise more simple errors and see how the compiler reacts.
+[3]     (
+∗
+1.5) What does the following example do?
+void send(int
+∗
+to, int
+∗
+from, int count)
+//
+Duff ’s device. Helpful comment deliberately deleted.
+{
+int n = (count+7)/8;
+switch (count%8) {
+case 0:
+do {
+∗
+to++ =
+∗
+from++;
+case 7:
+∗
+to++ =
+∗
+from++;
+case 6:
+∗
+to++ =
+∗
+from++;
+case 5:
+∗
+to++ =
+∗
+from++;
+case 4:
+∗
+to++ =
+∗
+from++;
+case 3:
+∗
+to++ =
+∗
+from++;
+case 2:
+∗
+to++ =
+∗
+from++;
+case 1:
+∗
+to++ =
+∗
+from++;
+} while (−−n>0);
+}
+}
+Why would anyone write something like that?  No, this is not recommended as good style.
+[4]     (
+∗
+2) Write a function
+atoi(const char
+∗
+)
+that takes a C-style string containing digits and returns
+the corresponding
+int
+.  For example,
+atoi("123")
+is
+123
+.  Modify
+atoi()
+to handle C++ octal and
+hexadecimal notation in addition to plain decimal numbers.  Modify
+atoi()
+to handle the C++
+character constant notation.
+Section X.10
+Statements
+2007
+[5]     (
+∗
+2)  Write  a  function
+itoa(int  i,  char  b[])
+that  creates  a  string  representation  of
+i
+in
+b
+and
+returns
+b
+.
+[6]     Modify
+iota()
+from  the  previous  exercise  to  take an extra  ‘‘string  length’’ argument  to  make
+overflow less likely.
+[7]     (
+∗
+2.5) Write a program that strips comments out of a C++ program.  That is, read from
+cin
+,
+remove
+both
+//
+comments  and
+/
+∗∗
+/
+comments,  and  write  the  result  to
+cout
+.   Do  not  worry
+about  making  the  layout  of  the  output  look  nice  (that  would  be  another, and  much  harder,
+exercise).   Do  not  worry  about  incorrect  programs.   Beware  of
+//
+,
+/
+∗
+,  and
+∗
+/
+in  comments,
+strings, and character constants.
+[8]     (
+∗
+2)  Look  at  some  programs  to  get  an  idea  of  the  variety  of  indentation,  naming,  and  com-
+menting styles actually used.
+X.11   Expressions
+[1]     (
+∗
+1) Fully parenthesize the following expressions:
+a=b+c
+∗
+d<<2&8
+a & 077 != 3
+a==b||a==c&&c<5
+c=x!=0
+0<=i<7
+f(1,2)+3
+a=−1++b−−−5
+a=b==c++
+a=b=c=0
+a[4][2]
+∗
+=
+∗
+b?c:
+∗
+d
+∗
+2
+a−b,c=d
+[2]     (
+∗
+2)  Read  a  sequence  of  possibly  whitespace-separated  (name,value)  pairs,  where  the  name
+is  a  single  whitespace-separated  word  and  the  value  is  an  integer  or  a  floating-point  value.
+Compute  and  print  the  sum  and  mean  for  each  name  and  the  sum  and  mean  for  all  names.
+Hint: §10.2.8.
+[3]     (
+∗
+1) Write a table of values for the bitwise logical operations (§11.1.1) for all possible com-
+binations of
+0
+and
+1
+operands.
+[4]     (
+∗
+2) Write 5 expressions for which the order of evaluation is undefined.  Execute them to see
+what one or – preferably – more implementations do with them.
+[5]     (
+∗
+1.5) What happens if you divide by zero on your system?  What happens in case of over-
+flow and underflow?
+[6]     (
+∗
+1) Fully parenthesize the following expressions:
+∗
+p++
+∗
+−−p
+++a−−
+(int
+∗
+)p−>m
+∗
+p.m
+∗
+a[i]
+2008      Exercises
+Appendix      X
+[7]     (
+∗
+2) Implement and test these functions:
+strlen()
+, which returns the length of a C-style string;
+strcpy()
+, which copies a C-style string into another; and
+strcmp()
+, which compares two C-style
+strings.  Consider what the argument types and return types ought to be.  Then compare your
+functions with the standard library versions as declared in
+<cstring>
+(
+<string.h>
+) and as speci-
+fied in §43.4.
+[8]     (
+∗
+2) Modify the program from §X.11[3] to also compute the median.
+[9]     (
+∗
+2) Write a function
+cat()
+that takes two C-style string arguments and returns a string that is
+the concatenation of the arguments.  Use
+new
+to find store for the result.
+[10]   (
+∗
+2) Write a function
+rev()
+that takes a C-style string argument and reverses the characters in
+it.  That is,  after
+rev(p)
+the last character of
+p
+will be the first, etc.
+[11]   (
+∗
+2)  Type  in  the  calculator  example  and  get  it  to  work.   Do  not  ‘‘save  time’’  by  using  an
+already entered text.  You’ll learn most from finding and correcting ‘‘little silly errors.’’
+[12]   (
+∗
+2) Modify the calculator to report line numbers for errors.
+[13]   (
+∗
+3) Allow a user to define functions in the calculator.  Hint: Define a function as a sequence
+of operations just as a user would have typed them.  Such a sequence can be stored either as a
+character string or as a list of tokens.  Then read and execute those operations when the func-
+tion is called.  If you want a user-defined function to take arguments, you will have to inv ent
+a notation for that.
+[14]   (
+∗
+1.5)  Convert  the  desk  calculator  to  use  a
+symbol
+structure  instead  of  using  the  static  vari-
+ables
+number_value
+and
+string_value
+.
+[1]     (
+∗
+1) Copy all even non-zero elements of an
+int[]
+into a
+vector<int>
+.  Use a pointer and
+++
+for
+the traversal.
+X.12   Select Operations
+[2]     (
+∗
+2) Allocate so much memory using
+new
+that
+bad_alloc
+is thrown.  Report how much mem-
+ory  was  allocated  and  how much  time  it  took.  Do  this  twice:  once  not  writing  to  the  allo-
+cated memory and once writing to each element.
+[3]      Write  a  simple  loop  calculating  a  sum  of  elements  (like
+std::accumulate()
+).   Write  it  in  a
+dozen  or  more  ways  using
+for
+-statements,  range-
+for
+statements,  the
+for_each()
+algorithm,
+using indices, pointers, and iterators, using ‘‘plain code’’, function objects, and lambdas, and
+using different element types.  See if you can find any performance differences between the
+different versions.
+[4]     (
+∗
+2.5)  Define  an
+apply(v,f)
+that  applies  a  function
+f
+to  each  element  of
+v
+assumed  to  be  a
+vector<Shape
+∗
+>
+.   Test
+apply()
+with  a  a  variety  of  functions,  function  objects,  and  lambdas.
+Note that by capturing variables from a lambda or storing values in a function object, you can
+call
+Shape
+functions that takes arguments without having to have
+f()
+take explicit arguments.
+Hint: there is a variety of ways of specifying
+apply()
+’s argument types; experiment.
+[5]     (
+∗
+4)  Find  a  program  of  a  few thousand  lines  of  code,  preferably  a  program  used  for  a  real-
+world task, rather than an exercise solution.  Count the number of casts (of all kinds).  If not
+already  done,  classify  all  casts  by  turning  them  into  named  casts.   Eliminate  as  many
+static_cast
+s,
+reinterpre_cast
+s,  and
+const_cast
+s  as  possible.   This  will  most  likely  involve
+adding specific type conversion functions, templates, etc.
+Section X.13
+Functions
+2009
+X.13   Functions
+[1]     (
+∗
+1) Write declarations for the following: a function taking arguments of type pointer to char-
+acter and reference to integer and returning no value; a pointer to such a function; a function
+taking such a pointer as an argument; and a function returning such a pointer.  Write the defi-
+nition of a function that takes such a pointer as an argument and returns its argument as the
+return value.  Hint: Use a type alias (
+using
+).
+[2]     (
+∗
+1) What does the following mean? What would it be good for?
+using riffi = int (&) (int, int);
+[3]     (
+∗
+1.5) Write a program like ‘‘Hello, world!’’  that takes a name as a command-line argument
+and writes ‘‘Hello,
+name
+!
+’’.  Modify this program to take any number of names as arguments
+and to say hello to each.
+[4]     (
+∗
+1.5)  Write  a  program  that  reads  an  arbitrary  number  (possibly  limited  to  some  maximum
+number)  of  files  whose  names  are  given  as  command-line  arguments  and  writes  them  one
+after another on
+cout
+.  Because this program concatenates its arguments to produce its output,
+you might call it
+cat
+.
+[5]     (
+∗
+2)  Convert  a  small  C  program  to  C++.   Modify  the  header  files  to  declare  all  functions
+called  and  to  declare  the  type  of  every  argument.   Where  possible,  replace
+#define
+s  with
+enum
+,
+const
+,
+constexpr
+,or
+inline
+.  Remove
+extern
+declarations from
+.cpp
+files and if necessary
+convert  all  function  definitions  to  C++  function  definition  syntax.  Replace  calls  of
+malloc()
+and
+free()
+with
+new
+and
+delete
+.  Remove
+unnecessary casts.
+[6]     (
+∗
+2)  Modify  the  result  of  §X.13[5]  by  eliminating  arrays  and  ‘‘naked’’
+new
+s  and
+delete
+s.
+Hint:
+vector
+and
+array
+.
+[7]     (
+∗
+2)  Implement
+ssor
+t()
+(§12.5)  using  a  more  efficient  sorting  algorithm.   Hint:
+sor
+t()
+and
+qsor
+t()
+.
+[8]     (
+∗
+2.5) Consider:
+struct Tnode {
+string word;
+int count;
+Tnode
+∗
+left;
+Tnode
+∗
+right;
+};
+Write a function for entering new words into a tree of
+Tnode
+s.  Write a function to write out
+a tree of
+Tnode
+s.  Write a function to write out a tree of
+Tnode
+s with the words in alphabeti-
+cal order.  Modify
+Tnode
+so that it stores (only) a pointer to an arbitrarily long word stored
+as an array of characters on free store using
+new
+.  Modify the functions to use the new defi-
+nition of
+Tnode
+.
+[9]     (
+∗
+2.5) Write a function to invert a two-dimensional array.  Hint: §7.4.2.
+[10]   (
+∗
+2)  Write  an  encryption  program  that  reads  from
+cin
+and  writes  the  encoded  characters  to
+cout
+.  You  might  use  this  simple  encryption  scheme:  the  encrypted  form  of  a  character
+c
+is
+cˆkey[i]
+,  where
+key
+is  a  string  passed  as  a  command-line  argument.   The  program  uses  the
+characters in
+key
+in a cyclic manner until all the input has been read.  Re-encrypting encoded
+text with the same key produces the original text.  If no key (or a null string) is passed, then
+2010      Exercises
+Appendix      X
+no encryption is done.
+[11]   (
+∗
+3.5)  Write  a  program  to  help  decipher  messages  encrypted  with  the  method  described  in
+§X.13[9]  without  knowing  the  key.  Hint:  See  David  Kahn:
+The  Codebreakers
+, Macmillan,
+1967, New York, pp. 207-213.
+[12]   (
+∗
+2)  Without  using  copy  and  paste,  implement  and  test  TEA  (the  Tiny  Encryption  Algo-
+rithm).  D.J. Wheeler and R.M. Needham:
+TEA, a tiny encryption algorithm
+.  Lecture Notes
+in Computer Science 1008: 363366.  http://143.53.36.235:8080/tea.htm.
+[13]   (
+∗
+1) How would you choose names for pointer to function types defined using a type alias?
+[14]   (
+∗
+2) Look at some programs to get an idea of the diversity of styles of names actually used.
+How are uppercase letters used?  How is the underscore used?  When are short names such as
+i
+and
+x
+used?
+[15]   (
+∗
+1) What is wrong with these macro definitions?
+#define PI = 3.141593;
+#define MAX(a,b) a>b?a:b
+#define fac(a) (a)
+∗
+fac((a)−1)
+[16]   (
+∗
+3) Write a macro processor that defines and expands simple macros (like the C preproces-
+sor  does).  Read  from
+cin
+and  write  to
+cout
+.  At first,  don’t try  to  handle  macros  with  argu-
+ments.  Hint: The desk calculator (§10.2) contains a symbol table and a lexical analyzer that
+you could modify.
+[17]   (
+∗
+3) Write an
+error
+function that takes a
+printf
+-style format string containing
+%s
+,
+%c
+, and
+%d
+directives  and  an  arbitrary  number  of  arguments.   Don’t  use
+printf()
+.   Look  at  §43.3  if  you
+don’t know the meaning of
+%s
+,
+%c
+, and
+%d
+.  Use
+<cstdarg>
+.
+[18]   (
+∗
+2) Implement a useful subset of
+print()
+from §12.2.5.
+[19]   (
+∗
+2) Add functions such as
+sqr
+t()
+,
+log()
+, and
+sin()
+to the desk calculator from §10.2.  Hint: Pre-
+define the names and call the functions through an array of pointers to functions.  Don’t for-
+get to check the arguments in a function call.
+[20]   (
+∗
+1) Write a factorial function that does not use recursion.
+[21]   (
+∗
+2) Write functions to add one day, one month, and one year to a
+Date
+as defined in §X.9[4].
+Write a function that gives the day of the week for a given
+Date
+.  Write a function that gives
+the
+Date
+of the first Monday following a given
+Date
+.
+X.14   Exception Handling
+[1]     (
+∗
+3) Write a
+Checked_ptr<T>
+that uses exceptions to signal run-time errors for a pointer sup-
+posed to point to an element of an array (or one-beyond-the-end-of the array).
+[2]     (
+∗
+3) Write a function that searches a binary tree of nodes based on a
+char
+∗
+field for a match.
+If  a  node  containing
+hello
+is  found,
+find("hello")
+will  return  a  pointer  to  that  node.   Use  an
+exception to indicate ‘‘not found.’’
+[3]     (
+∗
+3) Define a class
+Int
+that acts exactly like the built-in type
+int
+, except that it throws excep-
+tions rather than overflowing or underflowing.
+[4]     (
+∗
+2.5) Take the basic operations for opening, closing, reading, and writing from the C inter-
+face to your operating system and provide equivalent C++ functions that call the C functions
+but throw exceptions in case of errors.

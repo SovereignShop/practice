@@ -1,0 +1,73 @@
+#+TITLE: Paradigms
+#+DESCRIPTION: Programming-paradigm related practice problems.
+
+* Composition Relationship
+** Composition Relationship :drill:
+    :PROPERTIES:
+    :ID:       b06a7733-145d-4894-8b2e-5c5cca8714e0
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 3
+    :DRILL_FAILURE_COUNT: 3
+    :DRILL_AVERAGE_QUALITY: 1.667
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 1
+    :DRILL_LAST_REVIEWED: [2020-07-29 Wed 12:25]
+    :END:
+
+What is the composition relelationship?
+
+*** Answer
+
+Composition relationships are part-whole relationships where the part must
+constitute part of the whole object. For example, a heart is a part of a
+person’s body. The part in a composition can only be part of one object at a
+time. A heart that is part of one person’s body can not be part of someone
+else’s body at the same time.
+
+** Composition Relationship :drill:
+    SCHEDULED: <2018-11-25 Sun>
+    :PROPERTIES:
+    :ID:       74b59402-5982-4e05-863f-bab360d60aab
+    :DRILL_LAST_INTERVAL: 3.86
+    :DRILL_REPEATS_SINCE_FAIL: 2
+    :DRILL_TOTAL_REPEATS: 1
+    :DRILL_FAILURE_COUNT: 0
+    :DRILL_AVERAGE_QUALITY: 3.0
+    :DRILL_EASE: 2.36
+    :DRILL_LAST_QUALITY: 3
+    :DRILL_LAST_REVIEWED: [2018-11-21 Wed 09:49]
+    :END:
+
+What does the composition relationship imply about the lifecyle of objects?
+
+*** Answer
+
+Most often, the part is created when the object is created, and destroyed
+when the object is destroyed.
+
+** Composition Relationship :drill:
+    :PROPERTIES:
+    :ID:       a66ff34c-7376-4788-ad7a-7b19932cef16
+    :DRILL_LAST_INTERVAL: 0.0
+    :DRILL_REPEATS_SINCE_FAIL: 1
+    :DRILL_TOTAL_REPEATS: 2
+    :DRILL_FAILURE_COUNT: 2
+    :DRILL_AVERAGE_QUALITY: 2.0
+    :DRILL_EASE: 2.5
+    :DRILL_LAST_QUALITY: 2
+    :DRILL_LAST_REVIEWED: [2018-11-27 Tue 10:57]
+    :END:
+
+What properties must be true of an object and a part for a relationship to be
+a composition?
+
+*** Answer
+
+To qualify as a composition, an object and a part must have the following relationship:
+- The part (member) is part of the object (class)
+- The part (member) can only belong to one object (class) at a time
+- The part (member) has its existence managed by the object (class)
+- The part (member) does not know about the existence of the object (class)
+
+* Types of Object Composition
