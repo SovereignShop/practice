@@ -4213,3 +4213,559 @@ follows:
 ; 00000      00000
 #+END_SRC
 * Veitch, Please!
+
+
+* Decision Making Under Constraints
+Problem: A drone is navigating through a grid (2D array) where some cells are blocked. The drone needs to find a path from the top-left corner of the grid to the bottom-right corner. The drone should adapt its path dynamically based on the presence of obstacles. Write a Python function to simulate this.
+
+Example:
+#+BEGIN_SRC python
+class Actions:
+    RIGHT=3
+    DOWN=2
+    LEFT=1
+    UP=0
+
+def find_path(grid):
+
+    n = len(grid)
+    m = len(grid[0])
+
+    path = [(0,0)]
+    actions = [Actions.RIGHT]
+    visited = {(0,0): 0}
+
+    solution = []
+
+    while len(actions) > 0:
+
+        path_len = len(path)
+
+        x, y = path[-1]
+        if x == n-1 and y == m-1:
+            solution = path.copy()
+            actions[-1] = -1
+
+        action = actions[-1]
+        if action == Actions.RIGHT:
+            actions[-1] -= 1
+            pos = (x+1,y)
+            if x+1 < n and path_len < visited.get(pos, n*m) and grid[x+1][y] == 0:
+                path.append(pos)
+                visited[pos] = path_len
+                actions.append(3)
+        elif action == Actions.DOWN:
+            actions[-1] -= 1
+            pos = (x,y+1)
+            if y+1 < m and path_len < visited.get(pos, n*m) and grid[x][y+1] == 0:
+                path.append(pos)
+                visited[pos] = path_len
+                actions.append(3)
+        elif action == Actions.LEFT:
+            actions[-1] -= 1
+            pos = (x-1,y)
+            if x-1 >= 0 and path_len < visited.get(pos, n*m) and grid[x-1][y] == 0:
+                path.append(pos)
+                visited[pos] = path_len
+                actions.append(3)
+        elif action == Actions.UP:
+            actions[-1] -= 1
+            pos = (x,y-1)
+            if y-1 >= 0 and path_len < visited.get(pos, n*m) and grid[x][y-1] == 0:
+                path.append(pos)
+                visited[pos] = path_len
+                actions.append(3)
+        else:
+            actions.pop()
+            path.pop()
+
+    return solution
+
+grid = [
+    [0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 0, 1, 0],
+    [1, 0, 0, 0, 0]
+]
+
+find_path(grid)
+
+
+# Possible output: [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (3, 4), (4, 4)]
+#+END_SRC
+
+* Path of Least Energy
+
+Problem Statement:
+
+Consider a 2D grid representing a drone's map, where each cell can contain a natural number representing the amount of energy needed to travel through that cell. The drone starts from the top-left cell (0,0) and needs to reach the bottom-right cell (n-1, m-1). The drone can only move either right or down.
+
+Write a function that determines the path for the drone to follow that minimizes the total energy consumption. If there are multiple optimal paths, return any. Note that the drone is capable of infinite energy storage, so energy from one cell can be used later.
+
+#+BEGIN_SRC python
+
+class Actions:
+    RIGHT=1
+    DOWN=0
+    NO_ACTION=-1
+
+def find_path_dfs(grid):
+
+    n = len(grid)
+    m = len(grid[0])
+
+    path = [(0,0)]
+    costs = [grid[0][0]]
+    actions = [Actions.RIGHT]
+    visited = {(0,0): costs[0]}
+
+    solution = None
+
+    while len(actions) > 0:
+
+        pos = path[-1]
+        cost = costs[-1]
+        x, y = pos
+        action = actions[-1]
+
+        if x == n-1 and y == m-1:
+           solution = path.copy()
+
+        if action == Actions.RIGHT:
+            pos = (x,y+1)
+            actions[-1] -= 1
+            if y+1 < m:
+                new_cost = cost + grid[x][y+1]
+                if new_cost < visited.get(pos, float('inf')):
+                    visited[pos] = new_cost
+                    path.append(pos)
+                    costs.append(new_cost)
+                    actions.append(Actions.RIGHT)
+        elif action == Actions.DOWN:
+            pos = (x+1,y)
+            actions[-1] -= 1
+            if x+1 < n:
+                new_cost = cost + grid[x+1][y]
+                if new_cost < visited.get(pos, float('inf')):
+                    visited[pos] = new_cost
+                    path.append(pos)
+                    costs.append(new_cost)
+                    actions.append(Actions.RIGHT)
+        elif action == Actions.NO_ACTION:
+            actions.pop()
+            path.pop()
+            costs.pop()
+        else:
+            raise Exception(f"Unknown Action: {action}")
+
+    if solution is None:
+        raise Exception("No solution!")
+    else:
+        return solution
+
+from queue import PriorityQueue
+import math
+
+def find_path_dijkstra(grid, start_pos, goal_pos):
+
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    n = len(grid)
+    m = len(grid[0])
+
+    costmap = [[float('inf')]*m for _ in range(n)]
+
+    x, y = start_pos
+    initial_cost = grid[x][y]
+    costmap[x][y] = initial_cost
+
+    predecessors = {start_pos: None}
+    pq = PriorityQueue()
+    pq.put_nowait((initial_cost, start_pos))
+
+    while pq:
+
+        cost, pos = pq.get_nowait()
+        x, y = pos
+        if pos == goal_pos:
+            break
+
+        for neighbor in [(x, y+1), (x+1, y), (x-1, y), (x, y-1)]:
+            nx, ny = neighbor
+            if nx == n or nx < 0 or ny == m or ny < 0:
+                continue
+
+            cost = costmap[x][y] + grid[nx][ny]
+            mincost = costmap[nx][ny]
+            if cost < mincost:
+                costmap[nx][ny] = cost
+                priority = cost + heuristic(goal_pos, neighbor)
+                pq.put_nowait((priority, neighbor))
+                predecessors[neighbor] = pos
+
+    path = []
+    while pos != start_pos:
+        path.append(pos)
+        pos = predecessors[pos]
+    path.append(start_pos)
+
+    return path[::-1]
+
+grid1 = [
+    [1, 3, 1],
+    [1, 5, 1],
+    [4, 2, 1]
+]
+
+find_path_dijkstra(grid1, (0, 0), (2, 2))
+
+grid = [
+    [1, 10, 1],
+    [1, 1, 1]
+]
+
+find_path_dijkstra(grid, (0, 0), (0, 2))
+
+
+#+END_SRC
+* Resource Allocation Challenge
+Sure, here's a concrete problem statement along with example input and output:
+
+Problem Statement:
+
+You are given a system with multiple processing units, each with different processing speeds and power consumption. Each unit can process only one data chunk at a time and has a power consumption limit that it can't exceed. Your goal is to distribute a list of data chunks to the units such that the total processing time is minimized, and the power consumption of each unit doesn't exceed its limit.
+
+The processing units and data chunks are represented as follows:
+
+units: A list of tuples where each tuple represents a processing unit. The tuple contains two integers - the first one is the processing speed of the unit in MB/s, and the second one is the maximum power consumption of the unit in W.
+chunks: A list of integers where each integer represents the size of a data chunk in MB.
+
+Write a function allocate_data(units: List[Tuple[int, int]], chunks: List[int]) -> Dict[int, List[int]] that takes these two lists as input and returns a dictionary where the keys are the indices of the units and the values are lists of indices of the data chunks assigned to the units.
+
+If it's not possible to allocate all data chunks without exceeding the power consumption limit of any unit, the function should return an empty dictionary.
+
+Example:
+
+Input:
+#+BEGIN_SRC python
+units = [(10, 20), (15, 30), (20, 25)]
+chunks = [30, 50, 40, 60, 70]
+#+END_SRC
+
+OUTPUT:
+#+BEGIN_SRC python
+{
+  0: [0, 3],
+  1: [2, 4],
+  2: [1]
+}
+
+#+END_SRC
+
+
+#+BEGIN_SRC python
+def allocate_data(units: List[Tuple[int, int]], chunks: List[int]) -> Dict[int, List[int]]
+#+END_SRC
+* Napsack Algorithm
+You are preparing for a hike and have a backpack that can carry a certain amount of weight. You have a number of items you might take on the hike, each with a weight and a utility score. Your task is to choose which items to take on the hike in order to maximize your total utility, while staying within the weight limit of your backpack.
+
+The function maximize_hike_utility(weight_limit, items) takes the following inputs:
+
+An integer weight_limit (1 <= weight_limit <= 10^3) which represents the total weight your backpack can carry.
+
+A list of tuples items (1 <= len(items) <= 100), where each tuple is in the form (weight, utility) representing each item's weight and utility score. Each item's weight and utility score are integers (1 <= weight, utility <= 100).
+
+Your function should return a list of indices (0-indexed) of items to include in your backpack in order to maximize total utility. If there are multiple solutions with the same utility, return any one of them.
+
+Example:
+
+#+BEGIN_SRC python
+weight_limit = 50
+items = [(10, 60), (20, 100), (30, 120)]
+
+print(maximize_hike_utility(weight_limit, items))
+# -> [1, 0]
+#+END_SRC
+
+#+BEGIN_SRC python
+
+from queue import PriorityQueue, Queue
+
+def maximize_hike_utility(weight_limit, items):
+    n_items = len(items)
+    q = PriorityQueue()
+    for i, (weight, utility) in enumerate(items):
+        if weight < weight_limit:
+            q.put_nowait((utility, weight, set([i])))
+
+    full_packs = PriorityQueue()
+
+    while not q.empty():
+
+        pack = q.get_nowait()
+        pack_utility, pack_weight, item_indices = pack
+
+        pack_full = True
+        for i in range(n_items):
+            if i in item_indices:
+                continue
+
+            item_weight, item_utility = items[i]
+            new_pack_utility = pack_utility+item_utility
+            new_pack_weight = pack_weight+item_weight
+
+            if new_pack_weight <= weight_limit:
+                pack_full = False
+                q.put_nowait((new_pack_utility, new_pack_weight, item_indices.union([i])))
+
+        if pack_full:
+            full_packs.put_nowait((-pack_utility, pack_weight, item_indices))
+
+    _, _, indices = full_packs.get_nowait()
+    return indices
+
+
+test_weight_limit = 50
+test_items = [(10, 60), (20, 100), (30, 120)]
+
+print(maximize_hike_utility(test_weight_limit, test_items))
+#+END_SRC
+
+Dynamic programming
+#+BEGIN_SRC python
+
+def maximize_hike_utility(weight_limit, items):
+    n_items = len(items)
+
+    # Initialize a DP table with 0s
+    dp = [[0 for _ in range(weight_limit + 1)] for _ in range(n_items + 1)]
+
+    # Iterate over each item
+    for i in range(1, n_items + 1):
+        item_weight, item_utility = items[i - 1]
+
+        # Iterate over each possible weight limit
+        for w in range(1, weight_limit + 1):
+            if item_weight > w:
+                # The item is too heavy, so we can't include it
+                dp[i][w] = dp[i - 1][w]
+            else:
+                # We have two options: include the item or don't
+                # We choose the option that gives the maximum utility
+                dp[i][w] = max(dp[i - 1][w],
+                               dp[i - 1][w - item_weight] + item_utility)
+
+    # The maximum utility is in the bottom-right of the table
+    max_utility = dp[n_items][weight_limit]
+
+    # But we also want the indices of the items included
+    # We can find these by working backwards from the bottom-right
+    indices = []
+    w = weight_limit
+    for i in range(n_items, 0, -1):
+        if dp[i][w] != dp[i - 1][w]:
+            indices.append(i - 1)
+            w -= items[i - 1][0]
+
+    return sorted(indices)
+
+test_weight_limit = 50
+test_items = [(10, 60), (20, 100), (30, 120)]
+
+print(maximize_hike_utility(test_weight_limit, test_items))  # Output: [1, 2]
+
+#+END_SRC
+* Resource Allocation
+Problem Statement
+
+You are a systems engineer at a leading tech company working on time-critical radio frequency (RF) systems such as software defined radios and multi-function RF Systems. You need to process vast amounts of information in real time. For this, you can choose from various computational tasks, each with its own processing time, energy usage and priority level.
+
+The system you are working with has heterogeneous computing resources (e.g. CPU, GPU, FPGA, DSP) and a maximum energy consumption limit. Moreover, each task has a timing constraint, i.e., it must be processed within a certain amount of time.
+
+Your task is to select a set of computational tasks to execute that maximizes the total priority level while keeping within the energy limit and timing constraints for each task. You can assume that the priority level, energy usage, and processing time for each task are positive integers, and that the energy limit is a positive integer as well. Also, each task can only be performed once.
+
+Write a function maximize_priority to solve this problem.
+
+The function maximize_priority has two parameters:
+
+energy_limit: an integer
+tasks: a list of tuples. Each tuple contains three integers representing the processing time, energy usage and priority level of a task respectively.
+The function should return a list of integers representing the indices of tasks selected. If there are multiple solutions with the same maximum total priority, return any.
+
+Input Format
+The first line contains an integer energy_limit which represents the maximum energy that can be consumed.
+The following lines each contain a tuple with three integers representing the processing time, energy usage and priority level of each task.
+
+Output Format
+A list of integers representing the indices of the tasks selected.
+
+Example
+
+Input:
+
+#+BEGIN_SRC python
+energy_limit = 50
+tasks = [(20, 30, 90), (10, 40, 60), (20, 20, 100), (30, 40, 50)]
+#+END_SRC
+
+Output:
+
+#+BEGIN_SRC python
+[0, 2]
+#+END_SRC
+
+Explanation
+
+In this case, we can select tasks 0 and 2. Their combined energy usage is 30 + 20 = 50, which is exactly the energy limit. The total priority level of these tasks is 90 + 100 = 190, which is the maximum achievable within the energy limit. The corresponding processing times are within the timing constraints for each task.
+
+#+BEGIN_SRC python
+
+def maximize_priority(energy_limit, tasks):
+
+    n_tasks = len(tasks)
+    table = [[0]*(energy_limit+1) for _ in range(n_tasks+1)]
+
+    for i in range(1, n_tasks+1):
+        energy_use, priority_level = tasks[i - 1]
+        for e in range(1, energy_limit + 1):
+            if energy_use > e:
+                table[i][e] = table[i - 1][e]
+            else:
+                table[i][e] = max(table[i - 1][e],
+                                  table[i - 1][e - energy_use] + priority_level)
+
+    max_utility = table[n_tasks][energy_limit]
+
+    indices = []
+    e = energy_limit
+    for i in range(n_tasks, 0, -1):
+        if table[i][e] != table[i-1][e]:
+            indices.append(i - 1)
+            e -= table[i - 1][0]
+
+    return sorted(indices)
+
+
+energy_limit = 50
+tasks = [(30, 90), (40, 60), (32, 100), (40, 50)]
+
+
+maximize_priority(energy_limit, tasks)
+
+# Each task is a tuple: (processing time, utility, energy)
+tasks = [
+    (2, 3, 10),
+    (1, 2, 15),
+    (3, 4, 20),
+]
+
+# Each resource is a tuple: (energy limit, processing limit)
+resources = [
+    (30, 3),
+    (45, 2),
+]
+
+total_time = 4
+
+optimal_schedule(tasks, resources, total_time)
+#+END_SRC
+* Network Management
+
+#+BEGIN_SRC python
+from typing import List, Tuple
+
+def allocate_packets(packets: List[Tuple[int, int]], routes: List[int]) -> List[Tuple[int, int]]:
+    # Create a list of tuples (packet size, packet priority, packet index)
+    packets = [(size, priority, i) for i, (size, priority) in enumerate(packets)]
+    # Sort packets by priority (descending order) and size (ascending order in case of tie)
+    packets.sort(key=lambda packet: (-packet[1], packet[0]))
+
+    # Create a list of tuples (remaining bandwidth, route index)
+    routes = [(bandwidth, i) for i, bandwidth in enumerate(routes)]
+
+    allocation = []
+    for packet in packets:
+        size, _, packet_index = packet
+        # Sort routes by remaining bandwidth (ascending order)
+        routes.sort()
+        for i, route in enumerate(routes):
+            bandwidth, route_index = route
+            if bandwidth >= size:
+                # Assign packet to this route
+                allocation.append((packet_index, route_index))
+                # Update remaining bandwidth
+                routes[i] = (bandwidth - size, route_index)
+                break
+
+    return allocation
+
+packets = [(3, 10), (2, 20), (1, 30), (4, 40)]
+routes = [5, 3]
+
+allocate_packets(packets, routes)
+
+#+END_SRC
+* Assignment Problem
+
+#+BEGIN_SRC python
+def hungarian(cost_matrix):
+    # subtract min value from rows and columns to create zeros
+    for i in range(len(cost_matrix)):
+        min_val = min(cost_matrix[i])
+        cost_matrix[i] = [val - min_val for val in cost_matrix[i]]
+    for j in range(len(cost_matrix[0])):
+        min_val = min(row[j] for row in cost_matrix)
+        for i in range(len(cost_matrix)):
+            cost_matrix[i][j] -= min_val
+
+    # initial assignment
+    assignments = [-1 for _ in range(len(cost_matrix))]
+    for i in range(len(cost_matrix)):
+        for j in range(len(cost_matrix[0])):
+            if cost_matrix[i][j] == 0 and j not in assignments:
+                assignments[i] = j
+                break
+
+    while -1 in assignments:
+        # find a non-assigned row
+        for row in range(len(cost_matrix)):
+            if assignments[row] == -1:
+                break
+        # find a non-assigned zero in the row
+        for col in range(len(cost_matrix[0])):
+            if cost_matrix[row][col] == 0 and col not in assignments:
+                break
+        # assign the column to the row
+        assignments[row] = col
+
+        # make sure there's only one zero in the row/col
+        for i in range(len(cost_matrix)):
+            if i != row and cost_matrix[i][col] == 0:
+                cost_matrix[i][col] = float('inf')
+        for j in range(len(cost_matrix[0])):
+            if j != col and cost_matrix[row][j] == 0:
+                cost_matrix[row][j] = float('inf')
+
+        # if there are still non-assigned rows, repeat
+        if -1 in assignments:
+            min_val = float('inf')
+            for row in range(len(cost_matrix)):
+                if assignments[row] == -1:
+                    min_val = min(min_val, min(cost_matrix[row]))
+            for row in range(len(cost_matrix)):
+                if assignments[row] == -1:
+                    cost_matrix[row] = [val - min_val for val in cost_matrix[row]]
+
+    return assignments
+
+# Test
+cost_matrix = [
+    [10, 2, 3, 4],
+    [2, 3, 4, 5],
+    [3, 4, 5, 6],
+    [4, 5, 6, 7]
+]
+print(hungarian(cost_matrix))
+#+END_SRC
